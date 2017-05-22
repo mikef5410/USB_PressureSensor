@@ -1,0 +1,11 @@
+DRC Rules Export File for PCB: Z:\projects\MF_CAD\PressureSensor\PressureSensor\PressureSensor.PcbDoc
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=4.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=4.00
+RuleKind=Clearance|RuleName=OtherFillClearance|Scope=Board|Minimum=10.00
+RuleKind=Clearance|RuleName=Fill|Scope=Board|Minimum=5.00
+RuleKind=Clearance|RuleName=ClearanceTrackTrack|Scope=Board|Minimum=6.00
+RuleKind=Clearance|RuleName=PolyRegion|Scope=Board|Minimum=5.00
+RuleKind=Clearance|RuleName=ClearanceCoplanar|Scope=Board|Minimum=7.00
+RuleKind=Clearance|RuleName=BlockingCapClear|Scope=Board|Minimum=15.00
+RuleKind=Clearance|RuleName=CPWGND2KEEPOUT|Scope=Board|Minimum=0.00

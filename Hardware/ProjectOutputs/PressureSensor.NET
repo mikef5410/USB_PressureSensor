@@ -1,0 +1,287 @@
+Wire List
+
+<<< Component List >>>
+4.7uF                           C1             CAP0603
+1uF                             C2             CAP0402
+0.1uF                           C3             CAP0402
+0.1uF                           C4             CAP0402
+0.1uF                           C5             CAP0402
+0.1uF                           C6             CAP0402
+4.7uF                           C7             CAP0603
+1uF                             C8             CAP0603
+0.01uF                          C9             CAP0402
+1uF                             C10            CAP0603
+0.01uF                          C11            CAP0402
+0.1uF                           C12            CAP0402
+1uF                             C13            CAP0603
+0.01uF                          C14            CAP0402
+30pF                            C15            CAP0402
+4.7uF                           C16            CAP0603
+30pF                            C17            CAP0402
+0.01uF                          C18            CAP0402
+0.1uF                           C19            CAP0402
+1uF                             C20            CAP0402
+PRTR5V0U2X                      D1             SOT190P230X110-4N
+GRN                             D2             KINGBRIGHT_LED
+RED                             D3             KINGBRIGHT_LED
+RED                             D4             KINGBRIGHT_LED
+FCI10118193                     J1             FCI_10118193
+TagConnect TC2050               J2             TC2050-IDC
+MMZ1608Y102B                    L1             INDC1608X06N
+MMZ1608Y102B                    L2             INDC1608X06N
+MMZ1608Y102B                    L3             INDC1608X06N
+MMZ1608Y102B                    L4             INDC1608X06N
+0.1                             R1             RES0402
+10.0K                           R2             RES0402
+0                               R3             RES0402
+100K                            R4             RES0402
+100                             R5             RES0402
+100                             R6             RES0402
+10.0K                           R7             RES0402
+10.0K                           R8             RES0402
+100                             R9             RES0402
+100                             R10            RES0402
+10.0K                           R11            RES0402
+10.0K                           R12            RES0402
+0                               R13            RES0402
+PB6x3.5                         S1             PTS635
+PB6x3.5                         S2             PTS635
+                                U1             TI-DBV5_N
+93AA66AT                        U3             SOT-23-OT6_M
+                                U4             STM-LQFP48_N
+MS860702BA01-50                 X1             TETempHumidityPressSens
+SSCDANN150PG2A3                 X2             HoneywellPsenseDIP
+16.000 MHz                      Y1             CRYSTAL_SMD_3.2x2.5
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00001] SPI2_SCK
+        U3         4       CLK            PASSIVE     93AA66AT
+        U4         45      PB8            I/O         
+
+[00002] SPI2_MOSI
+        U3         3       DIN            PASSIVE     93AA66AT
+        U4         27      PB15           I/O         
+
+[00003] SPI2_MISO
+        U3         1       DO             PASSIVE     93AA66AT
+        U4         26      PB14           I/O         
+
+[00029] NetR11_1
+        R11        1       1              PASSIVE     10.0K
+        S1         1       1              PASSIVE     PB6x3.5
+        U4         44      BOOT0          INPUT       
+
+[00030] NetR10_1
+        R10        1       1              PASSIVE     100
+        U4         6       PF1-OSC_OUT    I/O         
+
+[00031] NetR9_2
+        R9         2       2              PASSIVE     100
+        U4         2       PC13           I/O         
+
+[00032] NetR6_2
+        R6         2       2              PASSIVE     100
+        U4         10      PA0            I/O         
+
+[00033] NetR5_1
+        R5         1       1              PASSIVE     100
+        U4         18      PB0            I/O         
+
+[00034] NetJ2_10
+        J2         10      \RST           PASSIVE     TagConnect TC2050
+        R13        1       1              PASSIVE     0
+
+[00036] NetD4_1
+        D4         1       A              PASSIVE     RED
+        R9         1       1              PASSIVE     100
+
+[00037] NetD3_1
+        D3         1       A              PASSIVE     RED
+        R6         1       1              PASSIVE     100
+
+[00038] NetD2_1
+        D2         1       A              PASSIVE     GRN
+        R5         2       2              PASSIVE     100
+
+[00039] NetC20_2
+        C20        2       2              PASSIVE     1uF
+        R12        1       1              PASSIVE     10.0K
+        R13        2       2              PASSIVE     0
+        S2         1       1              PASSIVE     PB6x3.5
+        U4         7       NRST           I/O         
+
+[00040] NetC18_1
+        C18        1       1              PASSIVE     0.01uF
+        L4         1       1              PASSIVE     MMZ1608Y102B
+        X2         2       Vdd            PASSIVE     SSCDANN150PG2A3
+
+[00041] NetC17_2
+        C17        2       2              PASSIVE     30pF
+        R10        2       2              PASSIVE     100
+        Y1         1       1              PASSIVE     16.000 MHz
+
+[00042] NetC15_2
+        C15        2       2              PASSIVE     30pF
+        U4         5       PF0-OSC_IN     I/O         
+        Y1         3       3              PASSIVE     16.000 MHz
+
+[00043] NetC14_1
+        C14        1       1              PASSIVE     0.01uF
+        L3         1       1              PASSIVE     MMZ1608Y102B
+        X1         1       Vdd            PASSIVE     MS860702BA01-50
+
+[00044] JTRST
+        U4         40      PB4            I/O         
+
+[00045] JTMS
+        J2         2       SWDIO/TMS      PASSIVE     TagConnect TC2050
+        U4         34      PA13           I/O         
+
+[00046] JTDO
+        J2         6       SWO/TDO        PASSIVE     TagConnect TC2050
+        U4         39      PB3            I/O         
+
+[00047] JTDI
+        J2         8       TDI            PASSIVE     TagConnect TC2050
+        U4         38      PA15           I/O         
+
+[00048] JTCK
+        J2         4       SWCK/TCK       PASSIVE     TagConnect TC2050
+        U4         37      PA14           I/O         
+
+[00049] I2C2_SDA
+        R7         2       2              PASSIVE     10.0K
+        U4         31      PA10           I/O         
+        X1         7       SDA            PASSIVE     MS860702BA01-50
+        X2         3       SDA            PASSIVE     SSCDANN150PG2A3
+
+[00050] I2C2_SCL
+        R8         2       2              PASSIVE     10.0K
+        U4         30      PA9            I/O         
+        X1         8       SCL            PASSIVE     MS860702BA01-50
+        X2         4       SCL            PASSIVE     SSCDANN150PG2A3
+
+[00051] \SPI2NSS
+        U3         5       \C\S           PASSIVE     93AA66AT
+        U4         46      PB9            I/O         
+
+[00052] Vddsd
+        C8         2       2              PASSIVE     1uF
+        C9         2       2              PASSIVE     0.01uF
+        C10        2       2              PASSIVE     1uF
+        C11        2       2              PASSIVE     0.01uF
+        L1         2       2              PASSIVE     MMZ1608Y102B
+        U4         24      VDDSD          POWER       
+        U4         25      VREFSD+        POWER       
+
+[00053] VBus
+        C2         2       2              PASSIVE     1uF
+        D1         4       4              PASSIVE     PRTR5V0U2X
+        J1         1       Vbus           PASSIVE     FCI10118193
+        R2         1       1              PASSIVE     10.0K
+        U1         1       VIN            POWER       
+
+[00054] USB_P
+        D1         2       2              PASSIVE     PRTR5V0U2X
+        J1         3       D+             PASSIVE     FCI10118193
+        U4         33      PA12           I/O         
+
+[00055] USB_N
+        D1         3       3              PASSIVE     PRTR5V0U2X
+        J1         2       D-             PASSIVE     FCI10118193
+        U4         32      PA11           I/O         
+
+[00056] P3V3
+        C4         1       1              PASSIVE     0.1uF
+        C5         2       2              PASSIVE     0.1uF
+        C6         2       2              PASSIVE     0.1uF
+        C7         2       2              PASSIVE     4.7uF
+        C16        1       1              PASSIVE     4.7uF
+        C19        1       1              PASSIVE     0.1uF
+        J2         1       VccTgt         PASSIVE     TagConnect TC2050
+        L1         1       1              PASSIVE     MMZ1608Y102B
+        L2         1       1              PASSIVE     MMZ1608Y102B
+        L3         2       2              PASSIVE     MMZ1608Y102B
+        L4         2       2              PASSIVE     MMZ1608Y102B
+        R1         2       2              PASSIVE     0.1
+        R3         2       2              PASSIVE     0
+        R7         1       1              PASSIVE     10.0K
+        R8         1       1              PASSIVE     10.0K
+        R12        2       2              PASSIVE     10.0K
+        S1         2       2              PASSIVE     PB6x3.5
+        U3         6       Vcc            PASSIVE     93AA66AT
+        U4         1       VBAT           POWER       
+        U4         17      VDD_2          POWER       
+        U4         20      PB2            I/O         
+        U4         48      VDD_1          POWER       
+
+[00057] NetR2_2
+        R2         2       2              PASSIVE     10.0K
+        U1         3       ON/O\F\F\      INPUT       
+
+[00059] NetC12_2
+        C12        2       2              PASSIVE     0.1uF
+        C13        2       2              PASSIVE     1uF
+        L2         2       2              PASSIVE     MMZ1608Y102B
+        U4         9       VDDA/VREF+     POWER       
+
+[00060] NetC3_2
+        C3         2       2              PASSIVE     0.1uF
+        U1         4       BYPASS         PASSIVE     
+
+[00061] NetC1_2
+        C1         2       2              PASSIVE     4.7uF
+        R1         1       1              PASSIVE     0.1
+        U1         5       VOUT           POWER       
+
+[00062] GND
+        C1         1       1              PASSIVE     4.7uF
+        C2         1       1              PASSIVE     1uF
+        C3         1       1              PASSIVE     0.1uF
+        C4         2       2              PASSIVE     0.1uF
+        C5         1       1              PASSIVE     0.1uF
+        C6         1       1              PASSIVE     0.1uF
+        C7         1       1              PASSIVE     4.7uF
+        C8         1       1              PASSIVE     1uF
+        C9         1       1              PASSIVE     0.01uF
+        C10        1       1              PASSIVE     1uF
+        C11        1       1              PASSIVE     0.01uF
+        C12        1       1              PASSIVE     0.1uF
+        C13        1       1              PASSIVE     1uF
+        C14        2       2              PASSIVE     0.01uF
+        C15        1       1              PASSIVE     30pF
+        C16        2       2              PASSIVE     4.7uF
+        C17        1       1              PASSIVE     30pF
+        C18        2       2              PASSIVE     0.01uF
+        C19        2       2              PASSIVE     0.1uF
+        C20        1       1              PASSIVE     1uF
+        D1         1       1              PASSIVE     PRTR5V0U2X
+        D2         2       K              PASSIVE     GRN
+        D3         2       K              PASSIVE     RED
+        D4         2       K              PASSIVE     RED
+        J1         5       GND            PASSIVE     FCI10118193
+        J1         6       GND            PASSIVE     FCI10118193
+        J2         3       GND            PASSIVE     TagConnect TC2050
+        J2         5       GND            PASSIVE     TagConnect TC2050
+        J2         9       GND            PASSIVE     TagConnect TC2050
+        R4         1       1              PASSIVE     100K
+        R11        2       2              PASSIVE     10.0K
+        S2         2       2              PASSIVE     PB6x3.5
+        U1         2       GND            POWER       
+        U3         2       GND            PASSIVE     93AA66AT
+        U4         8       VSSA/VREF-     POWER       
+        U4         23      VSSSD/VREFSD-  POWER       
+        U4         47      VSS_1          POWER       
+        X1         3       GND            PASSIVE     MS860702BA01-50
+        X2         1       GND            PASSIVE     SSCDANN150PG2A3
+        Y1         2       GND            PASSIVE     16.000 MHz
+        Y1         4       4              PASSIVE     16.000 MHz
+
+[00063] BoardRev
+        R3         1       1              PASSIVE     0
+        R4         2       2              PASSIVE     100K
+        U4         19      PB1            I/O         
+

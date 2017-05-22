@@ -1,0 +1,20 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: PressureSensor.PcbDoc   5/4/2017  4:37:30 PM
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Component Side to Bottom Layer
+ASCII RoundHoles File : PressureSensor-RoundHoles.TXT
+ASCII SlotHoles File : PressureSensor-SlotHoles.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      12mil (0.305mm)                                           Round             69        PTH        11.74inch (298.30mm)
+T2      24mil (0.6mm)                                             Slot              2         PTH        0.58inch (14.63mm)
+T3      32mil (0.813mm)                                           Round             8         PTH        1.11inch (28.32mm)
+T4      39mil (1mm)                                               Round             3         PTH        0.38inch (9.72mm)
+T5      94mil (2.4mm)                                             Round             4         PTH        0.63inch (15.88mm)
+T6      117mil (2.972mm)                                          Round             4         PTH        5.13inch (130.20mm)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              90
+
+Total Processing Time (hh:mm:ss) : 00:00:01

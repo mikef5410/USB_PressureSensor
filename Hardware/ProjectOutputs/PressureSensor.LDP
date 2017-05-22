@@ -1,0 +1,3 @@
+Layer Pairs Export File for PCB: Z:\projects\MF_CAD\PressureSensor\PressureSensor\PressureSensor.PcbDoc
+LayersSetName=Top_Bot_Thru_Holes|DrillFile=pressuresensor-roundholes.txt|DrillLayers=gtl,gbl
+LayersSetName=Top_Bot_Slot_Holes|DrillFile=pressuresensor-slotholes.txt|DrillLayers=gtl,gbl
