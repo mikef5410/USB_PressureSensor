@@ -54,7 +54,15 @@ void redOn(int on)
   return;
 }
 
-
+void usbLEDon(int on)
+{
+  if (on) {
+    gpio_set(USBLED);
+  } else {
+    gpio_clear(USBLED);
+  }
+  return; 
+}
 
 void setupClocks(void)
 {
@@ -74,11 +82,11 @@ void setupGPIOs(void)
   rcc_periph_clock_enable(RCC_GPIOD);
 
   // Setup USBOTG Clocking and pins
-  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0
+  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
   rcc_periph_clock_enable(RCC_USB);
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
                   GPIO11 | GPIO12);
-  gpio_set_af(GPIOA, GPIO_AF0, GPIO11 | GPIO12);
+  gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12); 
   
 
   //Red LED

@@ -136,7 +136,7 @@ EEPROM9366GLOBAL void eeprom9366_init()
 {
 
   //SPI2 pins for EEPROM (Alternate function 5)
-  //PB9 is SPI2NSS, PB10 is SPI2SCK
+  //PB9 is SPI2NSS, PB8 is SPI2SCK
   //PB14 is SPI2MISO, PB15 SPI2MOSI
   //PCLK is 48MHz, so we need to select a baud rate divider
   //such that SPI CLK is less than 2MHz (32 -> 1.5MHz)
@@ -145,17 +145,17 @@ EEPROM9366GLOBAL void eeprom9366_init()
   gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO9);
   
   gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN,
-                  GPIO10 | GPIO14 | GPIO15);
-  gpio_set_af(GPIOB, GPIO_AF5, GPIO10 | GPIO14 | GPIO15);
+                  GPIO8 | GPIO14 | GPIO15);
+  gpio_set_af(GPIOB, GPIO_AF5, GPIO8 | GPIO14 | GPIO15);
   gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_25MHZ,
-                                 GPIO10 | GPIO15); //SCK and MOSI are driven
+                                 GPIO8 | GPIO15); //SCK and MOSI are driven
   
 
   rcc_periph_clock_enable(RCC_SPI2);
 
   spi_reset(SPI2);
   spi_init_master(SPI2,1000000,SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                   SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT,
+                   SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_CRCL_8BIT,
                   SPI_CR1_MSBFIRST);
   
   spi_disable_crc(SPI2);
@@ -178,6 +178,7 @@ EEPROM9366GLOBAL void eeprom9366_init()
 #ifdef TESTEEPROM
 EEPROM9366GLOBAL void eeprom9366_test()
 {
+
   uint8_t d;
   
   myprintf("EEProm Test\n");

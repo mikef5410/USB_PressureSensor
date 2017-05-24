@@ -27,7 +27,7 @@
 #define MAGIC (0xAA)
 static char serialNumber[24]="0";
 static char manufacturer[64]="MF";
-static char product[64]="USB Switch/Attenuator/Stacklight";
+static char product[64]="USB Peripheral";
 static uint16_t vendorID = 0x4161;
 static uint16_t productID = 0x00ff;
 
@@ -310,8 +310,8 @@ static void cdcacm_set_config(usbd_device *usbd_dev, uint16_t wValue)
 
 }
 
-void otg_fs_isr(void) __attribute__ ((interrupt ));
-void otg_fs_isr(void)
+void usb_lp_isr(void) __attribute__ ((interrupt ));
+void usb_lp_isr(void)
 {
   portBASE_TYPE HPTw = pdFALSE;
 
@@ -432,7 +432,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   nvic_disable_irq(NVIC_USB_HP_IRQ);
   nvic_disable_irq(NVIC_USB_WKUP_IRQ);
 
-  usbd_dev = usbd_init(&stm32f411_usb_driver, &dev, &config,
+  usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev, &config,
                        usb_strings, 3,
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
@@ -440,12 +440,18 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
   nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
 
+  //Delay
+  for (int i = 0; i < 0x800000; i++)
+    __asm__("nop");
+
   //Now handle normal USB traffic with interrupts.
   nvic_enable_irq(NVIC_USB_LP_IRQ);
   while (1) {
     if (pdPASS == xSemaphoreTake(usbInterrupted,portMAX_DELAY)) {
+      usbLEDon(1);
       usbd_poll(usbd_dev);
       nvic_enable_irq(NVIC_USB_LP_IRQ);
+      //usbLEDon(0);
     }
   }
 }

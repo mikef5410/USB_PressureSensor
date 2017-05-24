@@ -87,10 +87,10 @@ extern "C" {
   void CAN1_RX1_IRQHandler(void) ALIAS(IntDefaultHandler);
   void CAN1_SCE_IRQHandler(void) ALIAS(IntDefaultHandler);
   void EXTI9_5_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM1_BRK_TIM9_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM1_UP_TIM10_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM1_TRG_COM_TIM11_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM1_CC_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM15_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM16_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM17_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM18_DAC2_IRQHandler(void) ALIAS(IntDefaultHandler);
   void TIM2_IRQHandler(void) ALIAS(IntDefaultHandler);
   void TIM3_IRQHandler(void) ALIAS(IntDefaultHandler);
   void TIM4_IRQHandler(void) ALIAS(IntDefaultHandler);
@@ -104,46 +104,31 @@ extern "C" {
   void USART2_IRQHandler(void) ALIAS(IntDefaultHandler);
   void USART3_IRQHandler(void) ALIAS(IntDefaultHandler);
   void EXTI15_10_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void RTC_Alarm_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_FS_WKUP_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM8_BRK_TIM12_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM8_UP_TIM13_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM8_TRG_COM_TIM14_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM8_CC_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void DMA1_Stream7_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void FSMC_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void SDIO_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM15_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM16_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM17_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM2_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM3_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM4_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void RTC_ALARM_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void CEC_IRQHandler(void) ALIAS(IntDefaultHandler);
   void TIM5_IRQHandler(void) ALIAS(IntDefaultHandler);
   void SPI3_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void UART4_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void UART5_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void TIM6_DAC_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM6_DAC1_IRQHandler(void) ALIAS(IntDefaultHandler);
   void TIM7_IRQHandler(void) ALIAS(IntDefaultHandler);
   void DMA2_Stream0_IRQHandler(void) ALIAS(IntDefaultHandler);
   void DMA2_Stream1_IRQHandler(void) ALIAS(IntDefaultHandler);
   void DMA2_Stream2_IRQHandler(void) ALIAS(IntDefaultHandler);
   void DMA2_Stream3_IRQHandler(void) ALIAS(IntDefaultHandler);
   void DMA2_Stream4_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void ETH_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void ETH_WKUP_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void CAN2_TX_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void CAN2_RX0_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void CAN2_RX1_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void CAN2_SCE_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_FS_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void DMA2_Stream5_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void DMA2_Stream6_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void DMA2_Stream7_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void USART6_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void I2C3_EV_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void I2C3_ER_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_HS_EP1_OUT_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_HS_EP1_IN_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_HS_WKUP_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void OTG_HS_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void DCMI_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void CRYP_IRQHandler(void) ALIAS(IntDefaultHandler);
-  void HASH_RNG_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void SDADC1_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void SDADC2_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void SDADC3_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void COMP1_2_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void TIM19_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void USB_HP_IRQHandler(void) ALIAS(IntDefaultHandler);
+  void USB_LP_IRQHandler(void) ALIAS(usb_lp_isr);
+  void USB_WKUP_IRQHandler(void) ALIAS(IntDefaultHandler);
   void FPU_IRQHandler(void) ALIAS(IntDefaultHandler);
 
 //*****************************************************************************
@@ -164,105 +149,104 @@ __attribute__ ((section(".isr_vector")))
 void (*const FlashVectors[]) (void) =
 {
   // Core Level - CM4/CM3
-  &__StackTop,			// The initial stack pointer
-      Reset_Handler,		// The reset handler
-      NMI_Handler,		// The NMI handler
-      (void (*)(void)) HardFault_Handler,	// The hard fault handler
-      MemManage_Handler,	// The MPU fault handler
-      BusFault_Handler,		// The bus fault handler
-      UsageFault_Handler,	// The usage fault handler
-      0,			// Reserved
-      0,			// Reserved
-      0,			// Reserved
-      0,			// Reserved
-      SVC_Handler,		// SVCall handler
-      DebugMon_Handler,		// Debug monitor handler
-      0,			// Reserved
-      PendSV_Handler,		// The PendSV handler
-      SysTick_Handler,		// The SysTick handler
-      WWDG_IRQHandler,		// Chip Level - STM32
-      PVD_IRQHandler,		// 16 Window Watchdog
-      TAMP_STAMP_IRQHandler,	// 17 PVD through EXTI Line detection 
-      RTC_WKUP_IRQHandler,	// 18 Tamper and TimeStamps through the EXTI line 
-      FLASH_IRQHandler,		// 19 RTC Wakeup through the EXTI line 
-      RCC_IRQHandler,		// 20 FLASH                        
-      EXTI0_IRQHandler,		// 21 RCC                          
-      EXTI1_IRQHandler,		// 22 EXTI Line0                   
-      EXTI2_IRQHandler,		// 23 EXTI Line1                   
-      EXTI3_IRQHandler,		// 24 EXTI Line2                   
-      EXTI4_IRQHandler,		// 25 EXTI Line3                   
-      DMA1_Stream0_IRQHandler,	// 26 EXTI Line4                   
-      DMA1_Stream1_IRQHandler,	// 27 DMA1 Stream 0                
-      DMA1_Stream2_IRQHandler,	// 28 DMA1 Stream 1                
-      DMA1_Stream3_IRQHandler,	// 29 DMA1 Stream 2                
-      DMA1_Stream4_IRQHandler,	// 30 DMA1 Stream 3                
-      DMA1_Stream5_IRQHandler,	// 31 DMA1 Stream 4                
-      DMA1_Stream6_IRQHandler,	// 32 DMA1 Stream 5                
-      ADC_IRQHandler,		// 33 DMA1 Stream 6                
-      CAN1_TX_IRQHandler,	// 34 ADC1, ADC2 and ADC3s         
-      CAN1_RX0_IRQHandler,	// 35 CAN1 TX                      
-      CAN1_RX1_IRQHandler,	// 36 CAN1 RX0                     
-      CAN1_SCE_IRQHandler,	// 37 CAN1 RX1                     
-      EXTI9_5_IRQHandler,	// 38 CAN1 SCE                     
-      TIM1_BRK_TIM9_IRQHandler,	// 39 External Line[9:5]s          
-      TIM1_UP_TIM10_IRQHandler,	// 40 TIM1 Break and TIM9          
-      TIM1_TRG_COM_TIM11_IRQHandler,	// 41 TIM1 Update and TIM10        
-      TIM1_CC_IRQHandler,	// 42 TIM1 Trigger and Commutation and TIM11 
-      TIM2_IRQHandler,		// 43 TIM1 Capture Compare         
-      TIM3_IRQHandler,		// 44 TIM2                         
-      TIM4_IRQHandler,		// 45 TIM3                         
-      I2C1_EV_IRQHandler,	// 46 TIM4                         
-      I2C1_ER_IRQHandler,	// 47 I2C1 Event                   
-      I2C2_EV_IRQHandler,	// 48 I2C1 Error                   
-      I2C2_ER_IRQHandler,	// 49 I2C2 Event                   
-      SPI1_IRQHandler,		// 50 I2C2 Error                   
-      SPI2_IRQHandler,		// 51 SPI1                         
-      USART1_IRQHandler,	// 52 SPI2                         
-      USART2_IRQHandler,	// 53 USART1                       
-      USART3_IRQHandler,	// 54 USART2                       
-      EXTI15_10_IRQHandler,	// 55 USART3                       
-      RTC_Alarm_IRQHandler,	// 56 External Line[15:10]s        
-      OTG_FS_WKUP_IRQHandler,	// 57 RTC Alarm (A and B) through EXTI Line 
-      TIM8_BRK_TIM12_IRQHandler,	// 58 USB OTG FS Wakeup through EXTI line 
-      TIM8_UP_TIM13_IRQHandler,	// 59 TIM8 Break and TIM12         
-      TIM8_TRG_COM_TIM14_IRQHandler,	// 60 TIM8 Update and TIM13        
-      TIM8_CC_IRQHandler,	// 61 TIM8 Trigger and Commutation and TIM14 
-      DMA1_Stream7_IRQHandler,	// 62 TIM8 Capture Compare         
-      FSMC_IRQHandler,		// 63 DMA1 Stream7                 
-      SDIO_IRQHandler,		// 64 FSMC                         
-      TIM5_IRQHandler,		// 65 SDIO                         
-      SPI3_IRQHandler,		// 66 TIM5                         
-      UART4_IRQHandler,		// 67 SPI3                         
-      UART5_IRQHandler,		// 68 UART4                        
-      TIM6_DAC_IRQHandler,	// 69 UART5                        
-      TIM7_IRQHandler,		// 70 TIM6 and DAC1&2 underrun errors 
-      DMA2_Stream0_IRQHandler,	// 71 TIM7                         
-      DMA2_Stream1_IRQHandler,	// 72 DMA2 Stream 0                
-      DMA2_Stream2_IRQHandler,	// 73 DMA2 Stream 1                
-      DMA2_Stream3_IRQHandler,	// 74 DMA2 Stream 2                
-      DMA2_Stream4_IRQHandler,	// 75 DMA2 Stream 3                
-      ETH_IRQHandler,		// 76 DMA2 Stream 4                
-      ETH_WKUP_IRQHandler,	// 77 Ethernet                     
-      CAN2_TX_IRQHandler,	// 78 Ethernet Wakeup through EXTI line 
-      CAN2_RX0_IRQHandler,	// 79 CAN2 TX                      
-      CAN2_RX1_IRQHandler,	// 80 CAN2 RX0                     
-      CAN2_SCE_IRQHandler,	// 81 CAN2 RX1                     
-      OTG_FS_IRQHandler,	// 82 CAN2 SCE                     
-      DMA2_Stream5_IRQHandler,	// 83 USB OTG FS                   
-      DMA2_Stream6_IRQHandler,	// 84 DMA2 Stream 5                
-      DMA2_Stream7_IRQHandler,	// 85 DMA2 Stream 6                
-      USART6_IRQHandler,	// 86 DMA2 Stream 7                
-      I2C3_EV_IRQHandler,	// 87 USART6                       
-      I2C3_ER_IRQHandler,	// 88 I2C3 event                   
-      OTG_HS_EP1_OUT_IRQHandler,	// 89 I2C3 error                   
-      OTG_HS_EP1_IN_IRQHandler,	// 90 USB OTG HS End Point 1 Out   
-      OTG_HS_WKUP_IRQHandler,	// 91 USB OTG HS End Point 1 In    
-      OTG_HS_IRQHandler,	// 92 USB OTG HS Wakeup through EXTI 
-      DCMI_IRQHandler,		// 93 USB OTG HS                   
-      CRYP_IRQHandler,		// 94 DCMI                         
-      HASH_RNG_IRQHandler,	// 95 CRYP crypto                  
-      FPU_IRQHandler		// 96 Hash and Rng                 
-      // 97 FPU                          
+  &__StackTop,			// 0x0 The initial stack pointer
+      Reset_Handler,		// 0x4 The reset handler
+      NMI_Handler,		// 0x8 The NMI handler
+      (void (*)(void)) HardFault_Handler,	// 0xc The hard fault handler
+      MemManage_Handler,	// 0x10 The MPU fault handler
+      BusFault_Handler,		// 0x14 The bus fault handler
+      UsageFault_Handler,	// 0x18 The usage fault handler
+      0,			// 0x1c Reserved
+      0,			// 0x20 Reserved
+      0,			// 0x24 Reserved
+      0,			// 0x28 Reserved
+      SVC_Handler,		// 0x2c SVCall handler
+      DebugMon_Handler,		// 0x30 Debug monitor handler
+      0,			// 0x34 Reserved
+      PendSV_Handler,		// 0x38 The PendSV handler
+      SysTick_Handler,		// 0x3c The SysTick handler
+      WWDG_IRQHandler,		// 0x40 Window Watchdog
+      PVD_IRQHandler,		// 0x44 PVD through EXTI Line detection 
+      TAMP_STAMP_IRQHandler,	// 0x48 Tamper and TimeStamps through the EXTI line 
+      RTC_WKUP_IRQHandler,	// 0x4c RTC Wakeup through the EXTI line 
+      FLASH_IRQHandler,		// 0x50 FLASH                        
+      RCC_IRQHandler,		// 0x541 RCC                                                  
+      EXTI0_IRQHandler,		// 0x582 EXTI Line0                                           
+      EXTI1_IRQHandler,		// 0x5c3 EXTI Line1                                           
+      EXTI2_IRQHandler,		// 0x604 EXTI Line2                                           
+      EXTI3_IRQHandler,		// 0x645 EXTI Line3                                           
+      EXTI4_IRQHandler,		// 0x686 EXTI Line4                                           
+      DMA1_Stream0_IRQHandler,	// 0x6c7 DMA1 Stream 0                                        
+      DMA1_Stream1_IRQHandler,	// 0x708 DMA1 Stream 1                                        
+      DMA1_Stream2_IRQHandler,	// 0x749 DMA1 Stream 2                                        
+      DMA1_Stream3_IRQHandler,	// 0x780 DMA1 Stream 3                                        
+      DMA1_Stream4_IRQHandler,	// 0x7c1 DMA1 Stream 4                                        
+      DMA1_Stream5_IRQHandler,	// 0x802 DMA1 Stream 5                                        
+      DMA1_Stream6_IRQHandler,	// 0x843 DMA1 Stream 6                                        
+      ADC_IRQHandler,		// 0x884 ADC1, ADC2 and ADC3s                                 
+      CAN1_TX_IRQHandler,	// 0x8c5 CAN1 TX                                              
+      CAN1_RX0_IRQHandler,	// 0x906 CAN1 RX0                                             
+      CAN1_RX1_IRQHandler,	// 0x947 CAN1 RX1                                             
+      CAN1_SCE_IRQHandler,	// 0x988 CAN1 SCE                                             
+      EXTI9_5_IRQHandler,	// 0x9c9 External Line[9:5]s                                  
+      TIM15_IRQHandler,	        // 0xa00 TIM15
+      TIM16_IRQHandler, 	// 0xa4 TIM16          
+      TIM17_IRQHandler, 	// 0xa8 TIM17
+      TIM18_DAC2_IRQHandler,    // 0xac TIM18/DAC2 underrrun
+      TIM2_IRQHandler,		// 0xb0 TIM2
+      TIM3_IRQHandler,		// 0xb4 TIM3                         
+      TIM4_IRQHandler,		// 0xb8 TIM4                         
+      I2C1_EV_IRQHandler,	// 0xbc I2C1 Event                            
+      I2C1_ER_IRQHandler,	// 0xc0 I2C1 Error                            
+      I2C2_EV_IRQHandler,	// 0xc4 I2C2 Event                            
+      I2C2_ER_IRQHandler,	// 0xc8 I2C2 Error                            
+      SPI1_IRQHandler,		// 0xcc SPI1                                  
+      SPI2_IRQHandler,		// 0xd0 SPI2                                  
+      USART1_IRQHandler,	// 0xd4 USART1                                
+      USART2_IRQHandler,	// 0xd8 USART2                                
+      USART3_IRQHandler,	// 0xdc USART3                                
+      EXTI15_10_IRQHandler,	// 0xe0 External Line[15:10]s                 
+      RTC_Alarm_IRQHandler,	// 0xe4 RTC Alarm (A and B) through EXTI Line 
+      CEC_IRQHandler,	        // 0xe8 HDMI CEC
+      TIM12_IRQHandler,	        // 0xec TIM12                                         
+      TIM13_IRQHandler, 	// 0xf0 TIM13                                        
+      TIM14_IRQHandler,	        // 0xf4 TIM14                       
+      0,    	                // 0xf8 RESERVED                                         
+      0,   	                // 0xfc RESERVED 
+      0,		        // 0x100 RESERVED 
+      0,		        // 0x104 RESERVED 
+      TIM5_IRQHandler,		// 0x108 TIM5                                                         
+      SPI3_IRQHandler,		// 0x10c SPI3                                                         
+      0,		        // 0x110 RESERVED
+      0,		        // 0x114 RESERVED
+      TIM6_DAC1_IRQHandler,	// 0x118 TIM6 and DAC1 underrun errors                              
+      TIM7_IRQHandler,		// 0x11c TIM7                                                         
+      DMA2_Stream0_IRQHandler,	// 0x120 DMA2 Stream 0                                                
+      DMA2_Stream1_IRQHandler,	// 0x124 DMA2 Stream 1                                                
+      DMA2_Stream2_IRQHandler,	// 0x128 DMA2 Stream 2                                                
+      DMA2_Stream3_IRQHandler,	// 0x12c DMA2 Stream 3                                                
+      DMA2_Stream4_IRQHandler,	// 0x130 DMA2 Stream 4                                                
+      SDADC1_IRQHandler,	// 0x134 SDADC1
+      SDADC2_IRQHandler,	// 0x138 SDADC2
+      SDADC3_IRQHandler,	// 0x13c SDACD3
+      COMP1_2_IRQHandler,	// 0x140 Comparator 1&2
+      0,	                // 0x144 RESERVED
+      0,	                // 0x148 RESERVED
+      0,	                // 0x14c RESERVED
+      0,	                // 0x150 RESERVED
+      0,	                // 0x154 RESERVED
+      0,	                // 0x158 RESERVED
+      0,	                // 0x15c RESERVED
+      0,	                // 0x160 RESERVED
+      0,	                // 0x164 RESERVED   
+      USB_HP_IRQHandler,	// 0x168 USB High Priority             
+      OSB_LP_IRQHandler,	// 0x16c USB Low Priority
+      USB_WKUP_IRQHandler,	// 0x170 USB wakeup
+      0,	                // 0x174 RESERVED
+      TIM19_IRQHandler,		// 0x178 Timer 19
+      0,		        // 0x17c RESERVED
+      0,	                // 0x180 RESERVED
+      FPU_IRQHandler		// 0x184 Floating Point
 };
 
 //void (*RAMVectors[NVECS])(void) __attribute__ (( aligned(32) ));
@@ -330,6 +314,10 @@ void Reset_Handler(void)
     }
   }
 
+  // Ensure 8-byte alignment of stack pointer on interrupts 
+  // Enabled by default on most Cortex-M parts, but not M3 r1 
+  SCB_CCR |= SCB_CCR_STKALIGN;
+
   // copy the interrupt vector table to RAM and point to it
   //memcpy(&RAMVectors,&FlashVectors,NVECS*sizeof( void(*)(void) ) );
   unsigned int *Dest = (unsigned int *) &RAMVectors;
@@ -350,6 +338,14 @@ void Reset_Handler(void)
   __libc_init_array();
 #endif
 
+  // Constructors. 
+  for (fp = &__preinit_array_start; fp < &__preinit_array_end; fp++) {
+    (*fp)();
+  }
+  for (fp = &__init_array_start; fp < &__init_array_end; fp++) {
+    (*fp)();
+  }
+
   // re-assert static values essential to main()
   //currentClockRate = Chip_Clock_GetRate(CLK_MX_MXCORE);	// should be 204 MHz, or close thereto
   //ClockRateHigh = 1;
@@ -362,6 +358,12 @@ void Reset_Handler(void)
   while (1) {
     ;
   }
+
+  // Destructors. 
+  for (fp = &__fini_array_start; fp < &__fini_array_end; fp++) {
+    (*fp)();
+  }
+  
 }
 
 //*****************************************************************************

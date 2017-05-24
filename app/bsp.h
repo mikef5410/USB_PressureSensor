@@ -43,6 +43,7 @@ BSPGLOBAL uint32_t SystemCoreClock;
 
 BSPGLOBAL void greenOn(int on);
 BSPGLOBAL void redOn(int on);
+BSPGLOBAL void usbLEDon(int on);
 BSPGLOBAL void setupClocks(void);
 BSPGLOBAL void setupGPIOs(void);
 BSPGLOBAL void setupNVIC(void);

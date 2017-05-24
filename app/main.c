@@ -47,9 +47,9 @@ int main(void)
   setupGPIOs();
 
 
-  redOn(1); greenOn(1);
+  redOn(1); greenOn(1); usbLEDon(1);
   Delay(0x1FFFFF);
-  redOn(0); greenOn(0);
+  redOn(0); greenOn(0); usbLEDon(0);
 
   init_hiresTimer();
   setupTimers(); //HV turn-off timer
@@ -65,10 +65,6 @@ int main(void)
 
   qStatus = xTaskCreate(vLEDTask1, "LED Task 1", 64, NULL, (tskIDLE_PRIORITY + 1UL),
                         (xTaskHandle *) &xLED1TaskHandle);
-
-
-  qStatus = xTaskCreate(vStackTask, "Stacklight", 128, NULL, (tskIDLE_PRIORITY + 1UL),
-                        (xTaskHandle *) &xStackTaskHandle);
 
 
   qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
