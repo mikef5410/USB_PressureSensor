@@ -30,28 +30,10 @@ extern "C" {
     CMD_ECHO,       // 04 0x04  
     CMD_SSN,        // 05 0x05  silicon serial number
     CMD_DIAG,       // 06 0x06  diagnostic self-test cmd, result-string
-    CMD_SP8T,       // 07 0x07  set the SP8T to selected (payload one byte)
-    CMD_AUXOUT,     // 08 0x08  set auxout bits (payload one byte)
-    CMD_AUXIN,      // 09 0x09  read aux in bits
-    CMD_ATT,        // 10 0x0A  set attenuation (one byte, enum)
-    CMD_LIGHT,      // 11 0x0B  set stacklight static (one byte, bitmapped)
-    CMD_NOTIFY,     // 12 0x0C  blink light (1 bytes: R|Y|G|OFF, long on time, long off time, long count)
-    CMD_READEE,     // 13 0x0D  read one byte of EEprom, 2-byte address (LE)
-    CMD_WRITEEE,    // 14 0x0E  write one byte of EEprom, 2-byte address (LE), 1 byte data
-    CMD_SPDT,       // 15 0x0F  set one of two spdts, 2 bytes { SW1 | SW2, J1|J2 }
-    CMD_ERASEALL,    // 16 0x10  erase al of the EEProm
+    CMD_READEE,     // 07 0x07  read one byte of EEprom, 2-byte address (LE)
+    CMD_WRITEEE,    // 08 0x08  write one byte of EEprom, 2-byte address (LE), 1 byte data
+    CMD_ERASEALL,    // 09 0x09  erase al of the EEProm
   } pkttype_t;
-
-  typedef enum {
-    ATT_0DB = 0,
-    ATT_10DB,
-    ATT_20DB,
-    ATT_30DB,
-    ATT_40DB,
-    ATT_50DB,
-    ATT_60DB,
-    ATT_70DB
-  } attenSetting_t; 
 
   typedef enum {
     PROD_UNKNOWN = 0xff,
@@ -61,39 +43,11 @@ extern "C" {
   } product_t;
   
   typedef enum {
-    J1SEL=0,
-    J2SEL
-  } spdtSetting_t;
-
-  typedef enum {
-    SW1 = 0,
-    SW2
-  } spdtSel_t;
-  
-  typedef enum {
     FLOW_USB = 0,
     FLOW_KBD,
     FLOW_DEBUGSHELL,
   } cmdflow_t;
 
-  typedef enum {
-    J1 = 0,
-    J2,
-    J3,
-    J4,
-    J5,
-    J6,
-    J7,
-    J8
-  } sp8tSel_t;
-
-  typedef enum {
-    OFF = 0,
-    RED = 1,
-    YEL = 2,
-    GRN = 4
-  } stacklightColor_t;
-      
   // define some generic payloads for parameterized commands
   //   For example, RESET now takes an argument for type of reset
   typedef struct __attribute__((__packed__)) {
@@ -155,13 +109,6 @@ extern "C" {
     uint8_t  bld_info_len;    // 1    set dynamically
     uint8_t  bld_info [41];  // up to 41 chars, null-term
   } payload_id_response_t;
-
-  typedef struct  __attribute__((__packed__)) {
-    uint8_t color;
-    uint32_t onTime;
-    uint32_t offTime;
-    uint32_t count;
-  } payload_notifyLight_t;
   
   typedef struct __attribute__((__packed__)) {        // SSN: silicon serial number
     uint32_t ssn_values[3]; // zero-fill unused bits, little-endian
@@ -193,7 +140,6 @@ extern "C" {
       payload_int32_t       pl_int32;
       payload_uint32_t      pl_uint32;
       payload_2uchar_t      pl_2uchar;
-      payload_notifyLight_t pl_notifyLight;
       payload_eeprom_t      pl_eeprom;
     } payload;
   } cmd_packet_t;

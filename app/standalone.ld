@@ -24,8 +24,8 @@
 MEMORY
 {
   /* Define each memory region */
-  RamLoc192 (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
-  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 1M
+  RamLoc192 (rwx) : ORIGIN = 0x20000000, LENGTH = 32K
+  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 256K
 }
 
 REGION_ALIAS("RAM", RamLoc192);  /*Put everything here for now */
@@ -33,10 +33,10 @@ REGION_ALIAS("ram", RamLoc192);  /*Put everything here for now */
 REGION_ALIAS("rom", FLASH);  /*Put everything here for now */
 
   /* Define a symbol for the top of each memory region */
-  __top_RamLoc192 = 0x20000000 + 0x20000;
-  __top_FLASH = 0x0 + 1M;
+  __top_RamLoc192 = 0x20000000 + 32K;
+  __top_FLASH = 0x0 + 256K;
 
-  __stack_size = 10240;
+  __stack_size = 4096;
 
 /* Enforce emmition of the vector table. */
 EXTERN (vector_table)

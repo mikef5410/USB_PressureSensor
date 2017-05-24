@@ -15,20 +15,23 @@
 #include "bsp.h"
 #include "OSandPlatform.h"
 
-static const clock_scale_t clock32F411 = {
-  //96 MHz, 16MHz crystal
-  .pllm = 16, //1MHz reference
-  .plln = 192, // 192MHz VCO
-  .pllp = 2, // 96 MHz core clock
-  .pllq = 4, // 48 MHz USB clock
-  .hpre = RCC_CFGR_HPRE_DIV_NONE, // 96MHz AHB
-  .ppre1 = RCC_CFGR_PPRE_DIV_2,  
-  .ppre2 = RCC_CFGR_PPRE_DIV_2,
-  .flash_config = FLASH_ACR_ICE | FLASH_ACR_DCE |
-  FLASH_ACR_LATENCY_3WS,
-  .apb1_frequency = 48000000,
-  .apb2_frequency = 48000000,
-};
+/*
+const struct clock_scale_t clockF373_16mhz = 
+  { // 16MHz Crystal, 64MHz 
+    .pll = RCC_CFGR_PLLMUL_PLL_IN_CLK_X16,
+    .pllsrc = RCC_CFGR_PLLSRC_HSE_PREDIV,
+    .hpre = RCC_CFGR_HPRE_DIV_NONE,
+    .ppre1 = RCC_CFGR_PPRE1_DIV_2,
+    .ppre2 = RCC_CFGR_PPRE2_DIV_NONE,
+    .power_save = 1,
+    .flash_config = FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY_2WS,
+    //.ahb_frequency	= 64000000,
+    .apb1_frequency = 32000000,
+    .apb2_frequency = 64000000,
+  };
+*/
+extern const struct rcc_clock_scale rcc_hsi_8mhz[];
+
 
 void greenOn(int on)
 {
@@ -51,44 +54,15 @@ void redOn(int on)
   return;
 }
 
-void vhvTimerExpired(xTimerHandle pxTimer)
-{
-  /* Optionally do something if the pxTimer parameter is NULL. */
-  //configASSERT( pxTimer );
-
-  /* Which timer expired? */
-  //lArrayIndex = ( long ) pvTimerGetTimerID( pxTimer );
-  
-  /* Do not use a block time if calling a timer API function from a timer callback
-     function, as doing so could cause a deadlock! */
-  xTimerStop( pxTimer, 0 );
-  if (! stacklightForceHV ) {
-    hvOn(0);
-  }
-}
-
-  
-void hvOn(int on)
-{
-  if (on) {
-    if (! hvState ) {
-      gpio_set(HVEnable);
-      delayms(60); //Power-up time is about 40ms
-      hvState=1;
-    }
-    xTimerReset(xTimers[0],5);
-  }  else {
-    gpio_clear(HVEnable);
-    hvState=0;
-  }
-}
 
 
 void setupClocks(void)
 {
 
-  rcc_clock_setup_hse_3v3(&clock32F411);
-  SystemCoreClock = 96000000;
+  //rcc_clock_setup_hse_3v3(&clockF373_16MHz);
+  rcc_clock_setup_hsi(&(rcc_hsi_8mhz[1]));
+  SystemCoreClock = 48000000;
+  rcc_usb_prescale_1();
   return;
 }
 
@@ -100,10 +74,11 @@ void setupGPIOs(void)
   rcc_periph_clock_enable(RCC_GPIOD);
 
   // Setup USBOTG Clocking and pins
-  rcc_periph_clock_enable(RCC_OTGFS);
+  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0
+  rcc_periph_clock_enable(RCC_USB);
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                  GPIO9 | GPIO11 | GPIO12);
-  gpio_set_af(GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
+                  GPIO11 | GPIO12);
+  gpio_set_af(GPIOA, GPIO_AF0, GPIO11 | GPIO12);
   
 
   //Red LED
@@ -115,22 +90,12 @@ void setupGPIOs(void)
   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0);
   gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO0);
   gpio_clear(GPIOB,GPIO0);
-  
-  //Control IOs
-  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0|GPIO1|
-                  GPIO2|GPIO3|GPIO4|GPIO5|GPIO6|GPIO7|GPIO8|
-                  GPIO9|GPIO10|GPIO11|GPIO12);
-  gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO0|GPIO1|
-                  GPIO2|GPIO3|GPIO4|GPIO5|GPIO6|GPIO7|GPIO8|
-                  GPIO9|GPIO10|GPIO11|GPIO12);
-  gpio_clear(GPIOC, GPIO0|GPIO1|
-                  GPIO2|GPIO3|GPIO4|GPIO5|GPIO6|GPIO7|GPIO8|
-                  GPIO9|GPIO10|GPIO11|GPIO12);
-  
-  //HV Enable
-  gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2);
-  gpio_set_output_options(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO2);
-  gpio_clear(GPIOD, GPIO2);
+
+  //USB LED
+  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13);
+  gpio_set_output_options(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO13);
+  gpio_clear(GPIOC,GPIO13);
+
 
   eeprom9366_init();
   return;
@@ -155,8 +120,8 @@ void setupNVIC(void)
 
 void setupTimers(void)
 {
-  xTimers[0] = xTimerCreate("HVTimer", (HVTimeout/portTICK_RATE_MS),
-                            pdFALSE, (void *) 0, vhvTimerExpired );
+  //  xTimers[0] = xTimerCreate("HVTimer", (HVTimeout/portTICK_RATE_MS),
+  //          pdFALSE, (void *) 0, vhvTimerExpired );
 }
   
 

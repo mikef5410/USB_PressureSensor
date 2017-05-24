@@ -3,8 +3,8 @@
 ## LPC4330 Specific Definitions
 ARCH = armv7e-m
 CPU = cortex-m4
-FLASHK ?= 512
-RAMK ?= 192
+FLASHK ?= 256
+RAMK ?= 32
 
 # Which libc to use?
 #

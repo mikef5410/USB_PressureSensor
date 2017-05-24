@@ -19,7 +19,6 @@
 
 #include "OSandPlatform.h"
 
-#include <libopencm3/stm32/f4/nvic.h>
 #include <libopencm3/usb/cdc.h>
 
 #include "instr_task.h"
@@ -316,7 +315,7 @@ void otg_fs_isr(void)
 {
   portBASE_TYPE HPTw = pdFALSE;
 
-  nvic_disable_irq(NVIC_OTG_FS_IRQ);
+  nvic_disable_irq(NVIC_USB_LP_IRQ);
   xSemaphoreGiveFromISR(usbInterrupted, &HPTw);
   portEND_SWITCHING_ISR( HPTw );
 }
@@ -429,21 +428,24 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   //Take the semaphore nonblocking to ensure in the correct state
   xSemaphoreTake(usbInterrupted,0);
 
-  nvic_disable_irq(NVIC_OTG_FS_IRQ);
+  nvic_disable_irq(NVIC_USB_LP_IRQ); //We will only use the LP interrupt
+  nvic_disable_irq(NVIC_USB_HP_IRQ);
+  nvic_disable_irq(NVIC_USB_WKUP_IRQ);
+
   usbd_dev = usbd_init(&stm32f411_usb_driver, &dev, &config,
                        usb_strings, 3,
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
   CDCACM_dev=usbd_dev;
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
-  nvic_set_priority(NVIC_OTG_FS_IRQ,0xdf);
+  nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
 
   //Now handle normal USB traffic with interrupts.
-  nvic_enable_irq(NVIC_OTG_FS_IRQ);
+  nvic_enable_irq(NVIC_USB_LP_IRQ);
   while (1) {
     if (pdPASS == xSemaphoreTake(usbInterrupted,portMAX_DELAY)) {
       usbd_poll(usbd_dev);
-      nvic_enable_irq(NVIC_OTG_FS_IRQ);
+      nvic_enable_irq(NVIC_USB_LP_IRQ);
     }
   }
 }

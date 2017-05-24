@@ -21,7 +21,7 @@ CALC_OBJS2 = $(addsuffix .o, $(basename $(notdir $(1))))
 PROG:=APP
 
 #CFLAGS+=-ggdb -O0 -std=gnu99  -ffunction-sections -fdata-sections
-CFLAGS+=-O2 -D__STM32__ -DSTM32F4 -ggdb -std=gnu99 -fomit-frame-pointer -falign-functions=16 -ffunction-sections -fdata-sections
+CFLAGS+=-O2 -D__STM32__ -DSTM32F3 -ggdb -std=gnu99 -fomit-frame-pointer -falign-functions=16 -ffunction-sections -fdata-sections
 
 #CFLAGS+= -fshort-wchar -mabi=aapcs -mapcs-frame
 WARNINGS:= -Wall -Wextra
@@ -51,7 +51,7 @@ $(OBJS_DIR):
 # Primary Target (Application) Build
 ##############
 
-APP_SRCS = main.c bsp.c syscalls.c printf-stdarg.c cdcacm.c debug_shell.c command.c hiresTimer.c usb_f411.c atten.c fault_handler.c stacklight.c eeprom9366.c instr_task.c spdtAux.c sp8t.c
+APP_SRCS = main.c bsp.c syscalls.c printf-stdarg.c cdcacm.c debug_shell.c command.c hiresTimer.c fault_handler.c eeprom9366.c instr_task.c 
 
 APP_LIBS = libFreeRTOS.a $(LIBOPENCM3_LIBNAME)
 APP_INCLUDE = $(FREERTOS_INC) $(LIBOPENCM3_INC)
