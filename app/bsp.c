@@ -80,15 +80,7 @@ void setupGPIOs(void)
   rcc_periph_clock_enable(RCC_GPIOB);
   rcc_periph_clock_enable(RCC_GPIOC);
   rcc_periph_clock_enable(RCC_GPIOD);
-
-  // Setup USBOTG Clocking and pins
-  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
-  rcc_periph_clock_enable(RCC_USB);
-  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                  GPIO11 | GPIO12);
-  gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12); 
-  
-
+ 
   //Red LED
   gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0);
   gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO0);

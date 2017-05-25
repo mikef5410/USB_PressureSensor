@@ -15,6 +15,7 @@ extern portTASK_FUNCTION(vStackTask, pvParamaters);
 extern portTASK_FUNCTION(vInstrumentTask, pvParameters);
 static portTASK_FUNCTION(vLEDTask1, pvParameters)
 {
+  
   (void)(pvParameters);//unused params
   while(1) {
     if (USBConfigured) {
@@ -40,7 +41,6 @@ int main(void)
 {
   portBASE_TYPE qStatus = pdPASS;   // = 1, this, and pdFAIL = 0, are in projdefs.h
 
-  // Now setup the clocks ...
   setupClocks();
   
   // Setup GPIOs
@@ -67,11 +67,11 @@ int main(void)
                         (xTaskHandle *) &xLED1TaskHandle);
 
 
-  qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
-                        (xTaskHandle *) &xDebugShellTaskHandle);
+  //qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
+  //                      (xTaskHandle *) &xDebugShellTaskHandle);
 
-  qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1024, NULL,  (tskIDLE_PRIORITY + 1UL),
-                        (xTaskHandle *) &xInstrumentTaskHandle);
+  //qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1024, NULL,  (tskIDLE_PRIORITY + 1UL),
+  //                      (xTaskHandle *) &xInstrumentTaskHandle);
   
   (void) qStatus;
 

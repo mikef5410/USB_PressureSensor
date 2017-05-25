@@ -410,19 +410,30 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   
   (void)(pvParameters);//unused params
 
+  // Setup USBOTG Clocking and pins
+  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
+  rcc_usb_prescale_1();
+  rcc_periph_clock_enable(RCC_GPIOA);
+  rcc_periph_clock_enable(RCC_USB);
+  rcc_periph_reset_pulse(RCC_USB);
+  
+  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+                  GPIO11 | GPIO12);
+  gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12); 
+  
   UARTinQ = xQueueCreate( 256, sizeof(char));
   CTRLinQ = xQueueCreate( 2, sizeof(cmd_packet_t));
 
   //Default enumeration descriptors ...
   desig_get_unique_id_as_string(id,24); //Copy device SN to USB reported SN
-  //strncpy(serialNumber,id,24);
+
   strncpy(serialNumber,id + strlen(id)- 8,24);
 
   dev.idVendor=vendorID;
   dev.idProduct=productID;
 
   //If enumeration info is in EEPROM, use it, instead.
-  readEEprom();
+  //readEEprom();  FIXME!
   
   vSemaphoreCreateBinary(usbInterrupted);
   //Take the semaphore nonblocking to ensure in the correct state
@@ -444,6 +455,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   for (int i = 0; i < 0x800000; i++)
     __asm__("nop");
 
+#if 1
   //Now handle normal USB traffic with interrupts.
   nvic_enable_irq(NVIC_USB_LP_IRQ);
   while (1) {
@@ -451,7 +463,12 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
       usbLEDon(1);
       usbd_poll(usbd_dev);
       nvic_enable_irq(NVIC_USB_LP_IRQ);
-      //usbLEDon(0);
+      usbLEDon(0);
     }
   }
+#else
+  while (1) {
+    usbd_poll(usbd_dev);
+  }
+#endif  
 }
