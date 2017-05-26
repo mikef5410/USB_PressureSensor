@@ -91,8 +91,13 @@ typedef int32_t ChipDriverStatus_t;
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
+#ifndef MIN
 #define MIN(a,b) (a<=b)?(a):(b)
+#endif
+
+#ifndef MAX  
 #define MAX(a,b) (a>=b)?(a):(b)
+#endif
   
 //Trigger a HARD FAULT by writing to a FLASH ROM location
 #define TRIG_HARDFAULT *((volatile int*)(0x8000000))=0

@@ -36,6 +36,8 @@ xQueueHandle UARTinQ;
 
 usbd_device *CDCACM_dev;
 static xSemaphoreHandle usbInterrupted = NULL;
+extern const struct _usbd_driver mf_usbfs_v1_usb_driver;
+
 
 static struct usb_device_descriptor dev = {
   .bLength = USB_DT_DEVICE_SIZE,
@@ -309,7 +311,16 @@ static void cdcacm_set_config(usbd_device *usbd_dev, uint16_t wValue)
   USBConfigured=1;
 
 }
+void usb_hp_isr(void) __attribute__ ((interrupt ));
+void usb_hp_isr(void)
+{
+  portBASE_TYPE HPTw = pdFALSE;
 
+  nvic_disable_irq(NVIC_USB_LP_IRQ);
+  xSemaphoreGiveFromISR(usbInterrupted, &HPTw);
+  portEND_SWITCHING_ISR( HPTw );
+}
+  
 void usb_lp_isr(void) __attribute__ ((interrupt ));
 void usb_lp_isr(void)
 {
@@ -415,7 +426,9 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   rcc_usb_prescale_1();
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_USB);
+  rcc_periph_clock_enable(RCC_SYSCFG);
   rcc_periph_reset_pulse(RCC_USB);
+  
   
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
                   GPIO11 | GPIO12);
@@ -443,18 +456,19 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   nvic_disable_irq(NVIC_USB_HP_IRQ);
   nvic_disable_irq(NVIC_USB_WKUP_IRQ);
 
-  usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev, &config,
+  usbd_dev = usbd_init(&mf_usbfs_v1_usb_driver, &dev, &config,
                        usb_strings, 3,
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
-  CDCACM_dev=usbd_dev;
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
-  nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
+  CDCACM_dev=usbd_dev;
+  //nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
 
   //Delay
-  for (int i = 0; i < 0x800000; i++)
-    __asm__("nop");
+  //for (int i = 0; i < 0x800000; i++)
+  //  __asm__("nop");
 
+  //USBConfigured=1;
 #if 1
   //Now handle normal USB traffic with interrupts.
   nvic_enable_irq(NVIC_USB_LP_IRQ);

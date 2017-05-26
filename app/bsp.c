@@ -66,9 +66,38 @@ void usbLEDon(int on)
 
 void setupClocks(void)
 {
+  //rcc_clock_setup_hsi(&(rcc_hsi_8mhz[1]));
 
-  //rcc_clock_setup_hse_3v3(&clockF373_16MHz);
-  rcc_clock_setup_hsi(&(rcc_hsi_8mhz[1]));
+  // 16 MHz external crystal, 48MHz CPU
+  // hpre=1, PLL=X3, AHB pre=1, APB1 pre=1, APB2 pre=1, ADC pre=2
+  // SPI2 is APB1 = 48MHz
+  // I2C is PLL = 48MHz
+  // ADC is 24MHz
+  FLASH_ACR |= (1<<4); //Turn on Prefetch buffer (Must be when clock is < 24MHz)
+  rcc_set_hpre(RCC_CFGR_HPRE_DIV_NONE);
+  rcc_set_ppre2(RCC_CFGR_PPRE2_DIV_NONE );
+  rcc_set_ppre1(RCC_CFGR_PPRE1_DIV_NONE );
+
+  //Flash wait states: 0-24Mhz: 0, 24-48Mhz: 1,  48-72Mhz: 2
+  flash_set_ws(2);
+  rcc_set_pll_multiplier(RCC_CFGR_PLLMUL_PLL_IN_CLK_X3);
+  rcc_set_pll_source(RCC_CFGR_PLLSRC_HSE_PREDIV);
+  rcc_osc_on(RCC_HSE);
+  rcc_wait_for_osc_ready(RCC_HSE);
+  rcc_osc_on(RCC_PLL);
+  rcc_wait_for_osc_ready(RCC_PLL);
+  
+  rcc_set_sysclk_source(RCC_CFGR_SW_PLL);
+  // Wait for PLL clock to be selected. 
+  rcc_wait_for_sysclk_status(RCC_PLL);
+
+  rcc_osc_off(RCC_HSI);
+  rcc_wait_for_osc_not_ready(RCC_HSI);
+  
+  rcc_ahb_frequency=48000000;
+  rcc_apb1_frequency=48000000;
+  rcc_apb2_frequency=48000000;
+  
   SystemCoreClock = 48000000;
   rcc_usb_prescale_1();
   return;
