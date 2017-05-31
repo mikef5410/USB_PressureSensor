@@ -37,7 +37,7 @@ xQueueHandle UARTinQ;
 usbd_device *CDCACM_dev;
 static xSemaphoreHandle usbInterrupted = NULL;
 extern const struct _usbd_driver mf_usbfs_v1_usb_driver;
-
+extern void _usbd_reset(usbd_device *usbd_dev); //usb.c
 
 static struct usb_device_descriptor dev = {
   .bLength = USB_DT_DEVICE_SIZE,
@@ -325,7 +325,7 @@ void usb_lp_isr(void) __attribute__ ((interrupt ));
 void usb_lp_isr(void)
 {
   portBASE_TYPE HPTw = pdFALSE;
-
+  usbLEDon(1);
   nvic_disable_irq(NVIC_USB_LP_IRQ);
   xSemaphoreGiveFromISR(usbInterrupted, &HPTw);
   portEND_SWITCHING_ISR( HPTw );
@@ -420,6 +420,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   char id[24];
   
   (void)(pvParameters);//unused params
+  //__asm__ ("BKPT #01");
 
   // Setup USBOTG Clocking and pins
   // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
@@ -432,6 +433,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
                   GPIO11 | GPIO12);
+                                   
   gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12); 
   
   UARTinQ = xQueueCreate( 256, sizeof(char));
@@ -460,6 +462,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
                        usb_strings, 3,
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
+  _usbd_reset(usbd_dev); //Enables device by clearing address and setting EF flag
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
   CDCACM_dev=usbd_dev;
   //nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
@@ -467,11 +470,11 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   //Delay
   //for (int i = 0; i < 0x800000; i++)
   //  __asm__("nop");
-
   //USBConfigured=1;
 #if 1
   //Now handle normal USB traffic with interrupts.
   nvic_enable_irq(NVIC_USB_LP_IRQ);
+
   while (1) {
     if (pdPASS == xSemaphoreTake(usbInterrupted,portMAX_DELAY)) {
       usbLEDon(1);
@@ -486,3 +489,4 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   }
 #endif  
 }
+

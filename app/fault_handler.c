@@ -30,13 +30,13 @@ void hard_fault_handler(/*uint32_t stack[]*/ void)
          }      
       }  
       //stackDump(stack);
-      __asm__ ("BKPT #01");
+      //__asm__ ("BKPT #01");
    //}
       while(1) {
         redOn(0);
-        delayms(1000);
+        delayms(400);
         redOn(1);
-        delayms(1000);
+        delayms(400);
       }
 }
 

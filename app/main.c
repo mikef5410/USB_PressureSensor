@@ -30,6 +30,10 @@ static portTASK_FUNCTION(vLEDTask1, pvParameters)
       delayms(800);
     } else {
       redOn(1);
+      delayms(100);
+      greenOn(1);
+      delayms(100);
+      greenOn(0);
       taskYIELD();
     }
   }
@@ -60,11 +64,12 @@ int main(void)
   // Create tasks
   // remember, stack size is in 32-bit words and is allocated from the heap ...
 
-  qStatus = xTaskCreate(vUSBCDCACMTask, "USB Serial Task", 256, NULL, (tskIDLE_PRIORITY + 1UL),
-                        (xTaskHandle *) &xUSBCDCACMTaskHandle);
 
   qStatus = xTaskCreate(vLEDTask1, "LED Task 1", 64, NULL, (tskIDLE_PRIORITY + 1UL),
                         (xTaskHandle *) &xLED1TaskHandle);
+
+  qStatus = xTaskCreate(vUSBCDCACMTask, "USB Serial Task", 64, NULL, (tskIDLE_PRIORITY + 1UL),
+                        (xTaskHandle *) &xUSBCDCACMTaskHandle);
 
 
   //qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
