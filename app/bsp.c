@@ -6,7 +6,8 @@
 *
 * Filename:     bsp.c
 *
-* Description: BSP "driver"
+* Description: BSP "driver" For project. The pressure sensor board is based on
+*              STM32F373CCT 
 *
 *******************************************************************************/
 //#define TRACE_PRINT 1
