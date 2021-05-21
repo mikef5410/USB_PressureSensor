@@ -20,6 +20,7 @@
 #include "OSandPlatform.h"
 
 #include <libopencm3/usb/cdc.h>
+#include <libopencm3/stm32/st_usbfs.h>
 
 #include "instr_task.h"
 #include "usbcmdio.h"
@@ -36,7 +37,7 @@ xQueueHandle UARTinQ;
 
 usbd_device *CDCACM_dev;
 static xSemaphoreHandle usbInterrupted = NULL;
-extern const struct _usbd_driver mf_usbfs_v1_usb_driver;
+//extern const struct _usbd_driver mf_usbfs_v1_usb_driver;
 extern void _usbd_reset(usbd_device *usbd_dev); //usb.c
 
 static struct usb_device_descriptor dev = {
@@ -217,10 +218,10 @@ static const char * usb_strings[] = {
 /* Buffer to be used for control requests. */
 uint8_t usbd_control_buffer[128];
 
-static int cdcacm_control_request(usbd_device *usbd_dev,
+static enum usbd_request_return_codes cdcacm_control_request(usbd_device *usbd_dev,
                                   struct usb_setup_data *req,
                                   uint8_t **buf, uint16_t *len,
-                                  usbd_control_complete_callback *complete)
+                                  void (**complete)(usbd_device *usbd_dev, struct usb_setup_data *req))
 {
   (void)complete;
   (void)buf;
@@ -233,16 +234,28 @@ static int cdcacm_control_request(usbd_device *usbd_dev,
      * even though it's optional in the CDC spec, and we don't
      * advertise it in the ACM functional descriptor.
      */
-    return 1;
+    char local_buf[10];
+    struct usb_cdc_notification *notif = (void *)local_buf;
+    
+    /* We echo signals back to host as notification. */
+    notif->bmRequestType = 0xA1;
+    notif->bNotification = USB_CDC_NOTIFY_SERIAL_STATE;
+    notif->wValue = 0;
+    notif->wIndex = 0;
+    notif->wLength = 2;
+    local_buf[8] = req->wValue & 3;
+    local_buf[9] = 0;
+    usbd_ep_write_packet(usbd_dev, 0x83, buf, 10);
+    return USBD_REQ_HANDLED;
   }
   case USB_CDC_REQ_SET_LINE_CODING:
     if (*len < sizeof(struct usb_cdc_line_coding)) {
-      return 0;
+      return USBD_REQ_NOTSUPP;
     }
 
-    return 1;
+    return USBD_REQ_HANDLED;
   }
-  return 0;
+  return USBD_REQ_NOTSUPP;
 }
 
 static void cdcacm_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
@@ -278,9 +291,7 @@ static void bulkctrl_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
 
   int len = usbd_ep_read_packet(usbd_dev, 0x01, buf+1, 64);
   if (len) {
-    redOn(1);
     rval=xQueueSendFromISR(CTRLinQ,&buf,&pxHigherPriTaskWoken);
-    redOn(0);
     (void)pxHigherPriTaskWoken;
     (void)rval;
     //if (rval != pdTRUE) { queue was full; }
@@ -316,7 +327,7 @@ void usb_hp_isr(void)
 {
   portBASE_TYPE HPTw = pdFALSE;
 
-  nvic_disable_irq(NVIC_USB_LP_IRQ);
+  nvic_disable_irq(NVIC_USB_HP_IRQ);
   xSemaphoreGiveFromISR(usbInterrupted, &HPTw);
   portEND_SWITCHING_ISR( HPTw );
 }
@@ -325,7 +336,6 @@ void usb_lp_isr(void) __attribute__ ((interrupt ));
 void usb_lp_isr(void)
 {
   portBASE_TYPE HPTw = pdFALSE;
-  usbLEDon(1);
   nvic_disable_irq(NVIC_USB_LP_IRQ);
   xSemaphoreGiveFromISR(usbInterrupted, &HPTw);
   portEND_SWITCHING_ISR( HPTw );
@@ -421,21 +431,6 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   
   (void)(pvParameters);//unused params
   //__asm__ ("BKPT #01");
-
-  // Setup USBOTG Clocking and pins
-  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
-  rcc_usb_prescale_1();
-  rcc_periph_clock_enable(RCC_GPIOA);
-  rcc_periph_clock_enable(RCC_USB);
-  rcc_periph_clock_enable(RCC_SYSCFG);
-  rcc_periph_reset_pulse(RCC_USB);
-  
-  
-  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                  GPIO11 | GPIO12);
-                                   
-  gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12); 
-  
   UARTinQ = xQueueCreate( 256, sizeof(char));
   CTRLinQ = xQueueCreate( 2, sizeof(cmd_packet_t));
 
@@ -446,6 +441,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
 
   dev.idVendor=vendorID;
   dev.idProduct=productID;
+
 
   //If enumeration info is in EEPROM, use it, instead.
   //readEEprom();  FIXME!
@@ -458,34 +454,41 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   nvic_disable_irq(NVIC_USB_HP_IRQ);
   nvic_disable_irq(NVIC_USB_WKUP_IRQ);
 
-  usbd_dev = usbd_init(&mf_usbfs_v1_usb_driver, &dev, &config,
+  // Setup USBOTG Clocking and pins
+  // GPIO A11 = USB_DM, A12 = USB_DP, Alternate function 0 or 14?
+  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+                  GPIO11 | GPIO12);
+  gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12);
+  rcc_periph_reset_release(RST_USB);
+
+  //gpio_set_output_options(GPIOA,GPIO_OTYPE_PP , GPIO_OSPEED_100MHZ, GPIO11|GPIO12);
+  
+  usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev, &config,
                        usb_strings, 3,
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
-  _usbd_reset(usbd_dev); //Enables device by clearing address and setting EF flag
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
   CDCACM_dev=usbd_dev;
-  //nvic_set_priority(NVIC_USB_LP_IRQ,0xdf);
 
-  //Delay
-  //for (int i = 0; i < 0x800000; i++)
-  //  __asm__("nop");
-  //USBConfigured=1;
 #if 1
   //Now handle normal USB traffic with interrupts.
+  nvic_enable_irq(NVIC_USB_WKUP_IRQ);
   nvic_enable_irq(NVIC_USB_LP_IRQ);
-
+  nvic_enable_irq(NVIC_USB_HP_IRQ);
   while (1) {
     if (pdPASS == xSemaphoreTake(usbInterrupted,portMAX_DELAY)) {
       usbLEDon(1);
       usbd_poll(usbd_dev);
       nvic_enable_irq(NVIC_USB_LP_IRQ);
+      nvic_enable_irq(NVIC_USB_HP_IRQ);
       usbLEDon(0);
     }
   }
 #else
   while (1) {
+    usbLEDon(1);
     usbd_poll(usbd_dev);
+    usbLEDon(0);
   }
 #endif  
 }

@@ -155,7 +155,7 @@ EEPROM9366GLOBAL void eeprom9366_init()
 
   spi_reset(SPI2);
   spi_init_master(SPI2,1000000,SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                   SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_CRCL_8BIT,
+                  SPI_CR1_CPHA_CLK_TRANSITION_1, /*SPI_CR1_CRCL_8BIT,*/
                   SPI_CR1_MSBFIRST);
   
   spi_disable_crc(SPI2);

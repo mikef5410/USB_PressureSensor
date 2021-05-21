@@ -34,6 +34,7 @@ static portTASK_FUNCTION(vLEDTask1, pvParameters)
       greenOn(1);
       delayms(100);
       greenOn(0);
+      usbLEDon(0);
       taskYIELD();
     }
   }
@@ -72,11 +73,11 @@ int main(void)
                         (xTaskHandle *) &xUSBCDCACMTaskHandle);
 
 
-  //qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
-  //                      (xTaskHandle *) &xDebugShellTaskHandle);
+  qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
+                        (xTaskHandle *) &xDebugShellTaskHandle);
 
-  //qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1024, NULL,  (tskIDLE_PRIORITY + 1UL),
-  //                      (xTaskHandle *) &xInstrumentTaskHandle);
+  qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1024, NULL,  (tskIDLE_PRIORITY + 1UL),
+                        (xTaskHandle *) &xInstrumentTaskHandle);
   
   (void) qStatus;
 

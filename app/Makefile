@@ -51,7 +51,7 @@ $(OBJS_DIR):
 # Primary Target (Application) Build
 ##############
 
-APP_SRCS = main.c bsp.c syscalls.c printf-stdarg.c mf_stm32usbfs_v1.c cdcacm.c debug_shell.c command.c hiresTimer.c fault_handler.c eeprom9366.c instr_task.c 
+APP_SRCS = main.c bsp.c syscalls.c printf-stdarg.c cdcacm.c debug_shell.c command.c hiresTimer.c fault_handler.c eeprom9366.c instr_task.c 
 
 APP_LIBS = libFreeRTOS.a $(LIBOPENCM3_LIBNAME)
 APP_INCLUDE = $(FREERTOS_INC) $(LIBOPENCM3_INC)

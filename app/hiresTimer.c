@@ -10,7 +10,8 @@
 void init_hiresTimer(void)
 {
   rcc_periph_clock_enable(RCC_HIRES_TIMER);
-  timer_reset(HIRES_TIMER);
+  rcc_periph_reset_pulse(RST_TIM2);
+  //timer_reset(HIRES_TIMER);
   /* Timer global mode:
    * - No divider
    * - Alignment edge
