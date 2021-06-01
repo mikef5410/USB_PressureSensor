@@ -49,24 +49,27 @@ static inline uint8_t spiTransaction(uint8_t command, uint16_t address, uint8_t 
   //printf("OUT: 0x%02x, 0x%04x, 0x%02x\n",command, address, data);
   //printf("Trans: 0x%02x 0x%02x 0x%02x\n",b1,b2,data);
 
+  //Wait for Tx empty
+  while (!(SPI_SR(SPI2) & SPI_SR_TXE));
+  rbyte = SPI_DR(SPI2); // Clear the rx buffer
+  rbyte = SPI_DR(SPI2); // Clear the rx buffer
+  rbyte = SPI_DR(SPI2); // Clear the rx buffer
   rbyte = SPI_DR(SPI2); // Clear the rx buffer
   
   assertCS();
   // Byte 1 ... 3 bits of command + 9th bit of address
-  (void)spi_xfer(SPI2, b1 );
+  spi_send8(SPI2,b1);
+  (void)spi_read8(SPI2);
 
   // Byte 2 ... 8 bits of address,
-  (void)spi_xfer(SPI2, b2);
-
-  // Wait for Tx empty
-  //while (!(SPI_SR(SPI2) & SPI_SR_TXE));
-
-  rbyte = spi_xfer(SPI2, b3);
-
-  while ((SPI_SR(SPI2) & SPI_SR_BSY));
-
+  spi_send8(SPI2,b2);
+  (void)spi_read8(SPI2);
+ 
+  // Byte 3
+  spi_send8(SPI2,b3);
+  rbyte=spi_read8(SPI2);
   deassertCS();
-  //printf("IN: 0x%02x\n",rbyte);
+
   return(rbyte);
 }
 
@@ -75,20 +78,28 @@ static inline void spiCMD(uint8_t command, uint16_t address)
 
   uint8_t b1 = (command<<1) | ((address & 0x100)>>8);
   uint8_t b2 = address & 0xff;
-
+  uint8_t r;
   //printf("OUT: 0x%02x, 0x%02x\n",command, address);
   //printf("Trans: 0x%02x 0x%02x\n",b1,b2);
+
+  //Wait for Tx empty
+  while (!(SPI_SR(SPI2) & SPI_SR_TXE));
+  r = SPI_DR(SPI2); // Clear the rx buffer
+  r = SPI_DR(SPI2); // Clear the rx buffer
+  r = SPI_DR(SPI2); // Clear the rx buffer
+  r = SPI_DR(SPI2); // Clear the rx buffer
+  (void)r;
+  
   assertCS();
   
   // Byte 1 ... 3 bits of command + 1 bit of address
-  (void)spi_xfer(SPI2,b1 );
-
+  spi_send8(SPI2,b1);
+  (void)spi_read8(SPI2);
+  
   // Byte 2 ... 8 bits of address
-  (void)spi_xfer(SPI2, b2);
-
-  //(void)spi_read(SPI2); //Wait here till xfer is done
-  while (SPI_SR(SPI2) & SPI_SR_BSY) ;
-
+  spi_send8(SPI2,b2);
+  (void)spi_read8(SPI2);
+  
   deassertCS();
   return;
 }
@@ -138,40 +149,37 @@ EEPROM9366GLOBAL void eeprom9366_init()
   //SPI2 pins for EEPROM (Alternate function 5)
   //PB9 is SPI2NSS, PB8 is SPI2SCK
   //PB14 is SPI2MISO, PB15 SPI2MOSI
-  //PCLK is 48MHz, so we need to select a baud rate divider
+  //PCLK is 72MHz, so we need to select a baud rate divider
   //such that SPI CLK is less than 2MHz (32 -> 1.5MHz)
+  rcc_periph_clock_enable(RCC_SPI2);
   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO9); //Software Slave-Select
   gpio_clear(GPIOB,GPIO9);
-  gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO9);
+  gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO9);
   
-  gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN,
+  gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
                   GPIO8 | GPIO14 | GPIO15);
   gpio_set_af(GPIOB, GPIO_AF5, GPIO8 | GPIO14 | GPIO15);
-  gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_25MHZ,
-                                 GPIO8 | GPIO15); //SCK and MOSI are driven
+  //gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ,
+  //                               GPIO8 | GPIO15); //SCK and MOSI are driven
   
 
-  rcc_periph_clock_enable(RCC_SPI2);
-
-  spi_reset(SPI2);
-  spi_init_master(SPI2,1000000,SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                  SPI_CR1_CPHA_CLK_TRANSITION_1, /*SPI_CR1_CRCL_8BIT,*/
-                  SPI_CR1_MSBFIRST);
-  
+  spi_set_master_mode(SPI2);
+  spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_128);
+  spi_set_clock_polarity_0(SPI2);
+  spi_set_clock_phase_0(SPI2);
+  spi_set_full_duplex_mode(SPI2);
+  spi_set_unidirectional_mode(SPI2); /* bidirectional but in 3-wire */
+  spi_set_data_size(SPI2, SPI_CR2_DS_8BIT);
+  spi_enable_software_slave_management(SPI2);
+  spi_send_msb_first(SPI2);
+  spi_set_nss_high(SPI2);
+  //spi_enable_ss_output(SPI2);
+  spi_fifo_reception_threshold_8bit(SPI2);
+  SPI_I2SCFGR(SPI2) &= ~SPI_I2SCFGR_I2SMOD;
+  spi_enable(SPI2);
   spi_disable_crc(SPI2);
   spi_set_next_tx_from_buffer(SPI2);
-  spi_set_full_duplex_mode(SPI2);
-
-  //spi_enable_ss_output(SPI2);
-  spi_disable_tx_buffer_empty_interrupt(SPI2);
-  spi_disable_rx_buffer_not_empty_interrupt(SPI2);
-  spi_disable_error_interrupt(SPI2);
-
-  spi_set_standard_mode(SPI2,0);
-
-  spi_set_baudrate_prescaler(SPI2,0x5); //Divide 48MHz Pclk by 64
-
-    spi_enable(SPI2);
+ 
   return;
 }
 
@@ -181,6 +189,10 @@ EEPROM9366GLOBAL void eeprom9366_test()
 
   uint8_t d;
   
+  printf("SPI_CR1: 0x%04x\n",(uint16_t)SPI_CR1(SPI2));
+  printf("SPI_CR2: 0x%04x\n",(uint16_t)SPI_CR2(SPI2));
+  printf("SPI_SR: 0x%04x\n",(uint16_t)SPI_SR(SPI2));
+ 
   myprintf("EEProm Test\n");
   eeprom9366_eraseAll();
   myprintf("Erase complete\n");
