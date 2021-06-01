@@ -125,6 +125,29 @@ void setupNVIC(void)
   return;
 }
 
+//Setup I2C2 with SCL on PA9, and SDA on PA10
+void setupI2C2(void)
+{
+        rcc_periph_clock_enable(RCC_I2C2);
+        rcc_set_i2c_clock_hsi(I2C2);
+
+        i2c_reset(I2C2);
+        /* Setup GPIO pin GPIO_USART2_TX/GPIO9 on GPIO port A for transmit. */
+        gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10 );
+        gpio_set_af(GPIOA, GPIO_AF4, GPIO9 | GPIO10);
+        i2c_peripheral_disable(I2C2);
+        //configure ANFOFF DNF[3:0] in CR1
+        i2c_enable_analog_filter(I2C2);
+        i2c_set_digital_filter(I2C2, 0);
+        /* Using HSI clock, and it's at 8Mhz */
+        i2c_set_speed(I2C2, i2c_speed_sm_100k, 8);
+        //configure No-Stretch CR1 (only relevant in slave mode)
+        i2c_enable_stretching(I2C2);
+        //addressing mode
+        i2c_set_7bit_addr_mode(I2C2);
+        i2c_peripheral_enable(I2C2);
+}
+
 void setupTimers(void)
 {
   //  xTimers[0] = xTimerCreate("HVTimer", (HVTimeout/portTICK_RATE_MS),

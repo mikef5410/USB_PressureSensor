@@ -49,6 +49,7 @@ BSPGLOBAL void setupGPIOs(void);
 BSPGLOBAL void setupNVIC(void);
 BSPGLOBAL void Delay(volatile uint32_t nCount);
 BSPGLOBAL void setupTimers(void);
+BSPGLOBAL void setupI2C2(void);
 
 BSPGLOBAL uint32_t hvState BSPPRESET(0);
 

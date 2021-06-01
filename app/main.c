@@ -61,7 +61,8 @@ int main(void)
   
   //Fixup NVIC for FreeRTOS ...
   setupNVIC();
-  
+
+  setupI2C2();
   // Create tasks
   // remember, stack size is in 32-bit words and is allocated from the heap ...
 

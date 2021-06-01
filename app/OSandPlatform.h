@@ -52,7 +52,8 @@ extern "C" {
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/desig.h>
 #include <libopencm3/stm32/spi.h>
-
+#include <libopencm3/stm32/i2c.h>
+  
 #include <libopencm3/stm32/f3/nvic.h>
   
 #include "version.h"
