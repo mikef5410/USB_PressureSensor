@@ -164,7 +164,7 @@ EEPROM9366GLOBAL void eeprom9366_init()
   
 
   spi_set_master_mode(SPI2);
-  spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_128);
+  spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_64); // 72/64 = 1.125MHz
   spi_set_clock_polarity_0(SPI2);
   spi_set_clock_phase_0(SPI2);
   spi_set_full_duplex_mode(SPI2);
