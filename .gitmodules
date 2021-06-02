@@ -7,3 +7,9 @@
 [submodule "external/libopencm3"]
 	path = external/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
+[submodule "external/MS8607_Generic_C_Driver"]
+	path = external/MS8607_Generic_C_Driver
+	url = https://github.com/TEConnectivity/MS8607_Generic_C_Driver
+[submodule "external/honeywell_hsc_ssc_i2c"]
+	path = external/honeywell_hsc_ssc_i2c
+	url = https://github.com/rodan/honeywell_hsc_ssc_i2c.git

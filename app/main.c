@@ -3,6 +3,7 @@
 
 #include "debug_shell.h"
 #include "instr_task.h"
+#include "ms8607.h"
 
 xTaskHandle *xLED1TaskHandle;
 xTaskHandle *xStackTaskHandle;
@@ -63,6 +64,14 @@ int main(void)
   setupNVIC();
 
   setupI2C2();
+
+  ms8607_init();
+  if (ms8607_is_connected()) {
+    ms8607_reset();
+    ms8607_set_humidity_resolution(ms8607_humidity_resolution_11b);
+    ms8607_set_pressure_resolution(ms8607_pressure_resolution_osr_8192);
+    ms8607_disable_heater();
+  }
   // Create tasks
   // remember, stack size is in 32-bit words and is allocated from the heap ...
 

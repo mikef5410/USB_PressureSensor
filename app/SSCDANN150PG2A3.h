@@ -36,4 +36,8 @@
 // PUBLIC API definition
 // ----------------------------------------------------------------
 
+// SSC150PG2A3 decodes as:
+//Compensated temp range -20C->85C  0-150PSIGuage I2C addr 0x28 10%-90% Vsupply 2^14 count 3.3V
+#define PressSenseAddr 0x28
+
 #endif				//_SSCDANN150PG2A3_INCLUDED

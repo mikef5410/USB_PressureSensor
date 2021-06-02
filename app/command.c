@@ -1,6 +1,6 @@
 #include "OSandPlatform.h"
 #include "debug_shell.h"
-
+#include "ms8607.h"
 
 #define GLOBAL_VERSION
 #include "version.h"
@@ -66,6 +66,31 @@ static int cmd_testee(int argc, char **argv)
 }
 #endif
 
+static int cmd_testthp(int argc, char **argv)
+{
+  (void) argc;
+  (void) argv;
+  float t, h, p, hc;
+  int tt, hh, pp;
+  int rval=0;
+  
+  if (ms8607_is_connected()) {
+    ms8607_reset();
+    ms8607_read_temperature_pressure_humidity(&t, &p, &h);
+    ms8607_get_compensated_humidity(t,h,&hc);
+    tt=(int)t;
+    int ttf = (int) (fabs(t-tt)*100);
+    pp=(int)p;
+    hh=(int)(hc);
+    int hhf = (int) (fabs(hc-hh)*100);
+    myprintf("T=%d.%02d, P=%d, H=%d.%02d\n",tt,ttf,pp,hh,hhf);
+  } else {
+    myprintf("No MS8607 Temp/Hum/Press sensor.\n");
+    rval=1;
+  }
+  return(rval);
+}
+
 
 dispatchEntry mainCommands[] = {
 //Context, Command,        ShortHelp,                                          command proc,  help proc
@@ -80,7 +105,8 @@ dispatchEntry mainCommands[] = {
 #ifdef TESTEEPROM
   {"","testee",           "                      Test eeprom", cmd_testee, NULL},
 #endif
-    //LAST ENTRY
+  {"","testthp",          "                      Test Temp/Hum/Press sensor", cmd_testthp, NULL},
+  //LAST ENTRY
   {NULL, NULL, NULL, NULL, NULL}
 };
 
