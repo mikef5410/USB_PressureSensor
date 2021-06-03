@@ -166,6 +166,9 @@ __attribute__((noreturn)) portTASK_FUNCTION(vInstrumentTask, pvParameters) {
     if ((rval=readPacket(instrInpktBuf))==0) {
       taskYIELD();// no Rx DATA so yield to other threads
     } else {
+      float t, p, h = 0.0;
+      enum ms8607_status stat8607;
+      uint8_t statusPressSens;
       instrOutpktBuf->version = 1;
       instrOutpktBuf->cmd = CMD_ACK; // default all packets to ACK-type
       instrOutpktBuf->length = htole16(USB_PKT_MIN_HEADER_SZ); // give all response packets a length      
@@ -198,6 +201,28 @@ __attribute__((noreturn)) portTASK_FUNCTION(vInstrumentTask, pvParameters) {
 
       case CMD_ERASEALL:
         eeprom9366_eraseAll();
+        break;
+
+      case CMD_AMBIENTTHP:
+        stat8607 = ms8607_read_temperature_pressure_humidity(&t, &p, &h);
+        if (stat8607 == ms8607_status_ok) {
+          instrOutpktBuf->payload.pl_3int32.int32a=(int32_t)(100.0 * t);
+          instrOutpktBuf->payload.pl_3int32.int32b=(int32_t)(10.0 * h);
+          instrOutpktBuf->payload.pl_3int32.int32c=(int32_t)(100.0 * p);
+        } else {
+          instrOutpktBuf->cmd=CMD_NAK;
+        }
+        break;
+
+      case CMD_AIRPRESSTEMP:
+        statusPressSens = measure_pressure(&p, &t);
+        if (statusPressSens == 0) {
+          instrOutpktBuf->payload.pl_3int32.int32a=(int32_t)(100.0 * t);
+          instrOutpktBuf->payload.pl_3int32.int32b=(int32_t)(100.0 * p);
+          instrOutpktBuf->payload.pl_3int32.int32c=0;
+        } else {
+          instrOutpktBuf->cmd=CMD_NAK;
+        }
         break;
         
       default:

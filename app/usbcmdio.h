@@ -33,6 +33,8 @@ extern "C" {
     CMD_READEE,     // 07 0x07  read one byte of EEprom, 2-byte address (LE)
     CMD_WRITEEE,    // 08 0x08  write one byte of EEprom, 2-byte address (LE), 1 byte data
     CMD_ERASEALL,    // 09 0x09  erase al of the EEProm
+    CMD_AMBIENTTHP, // 10 0xa   read ambient air temperature degCX100, humidity %rhX10, pressure paX100 3int32 payload
+    CMD_AIRPRESSTEMP, // 11 0xb  read air pressure sensor PSI x 100, temp C x 100 3int32 payload
   } pkttype_t;
 
   typedef enum {
@@ -40,6 +42,7 @@ extern "C" {
     PROD_STACKLIGHT = 1,
     PROD_MAPLEOLT = 2,
     PROD_ATTEN70 = 3,
+    PROD_PRESSURESENS = 4
   } product_t;
   
   typedef enum {
@@ -62,6 +65,12 @@ extern "C" {
   typedef struct __attribute__((__packed__)) {
     int16_t a_int16;
   } payload_int16_t;
+
+  typedef struct __attribute__((__packed__)) {
+    int32_t int32a;
+    int32_t int32b;
+    int32_t int32c;
+  } payload_3int32_t;
 
   typedef struct __attribute__((__packed__)) {
     int32_t a_int32;
@@ -141,6 +150,7 @@ extern "C" {
       payload_uint32_t      pl_uint32;
       payload_2uchar_t      pl_2uchar;
       payload_eeprom_t      pl_eeprom;
+      payload_3int32_t      pl_3int32;
     } payload;
   } cmd_packet_t;
   

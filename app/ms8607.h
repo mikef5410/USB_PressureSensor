@@ -109,8 +109,7 @@ void ms8607_set_pressure_resolution(enum ms8607_pressure_resolution);
  */
 void ms8607_set_humidity_i2c_master_mode(enum ms8607_humidity_i2c_master_mode);
 
-/**
- * \brief Reads the temperature, pressure and relative humidity value.
+/** * \brief Reads the temperature, pressure and relative humidity value.
  *
  * \param[out] float* : degC temperature value
  * \param[out] float* : mbar pressure value
