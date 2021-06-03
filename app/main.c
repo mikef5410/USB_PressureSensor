@@ -68,7 +68,7 @@ int main(void)
   ms8607_init();
   if (ms8607_is_connected()) {
     ms8607_reset();
-    ms8607_set_humidity_resolution(ms8607_humidity_resolution_11b);
+    ms8607_set_humidity_resolution(ms8607_humidity_resolution_12b);
     ms8607_set_pressure_resolution(ms8607_pressure_resolution_osr_8192);
     ms8607_disable_heater();
   }
