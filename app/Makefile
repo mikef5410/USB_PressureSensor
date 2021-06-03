@@ -5,7 +5,6 @@ PROJ_ROOT=..
 
 #make SILENT=no for a verbose build
 SILENT?=no
-
 #default BLD_CONFIG to RELEASE
 #BLD_CONFIG?=RELEASE
 BLD_CONFIG?=DEBUG

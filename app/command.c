@@ -1,6 +1,5 @@
 #include "OSandPlatform.h"
 #include "debug_shell.h"
-#include "ms8607.h"
 
 #define GLOBAL_VERSION
 #include "version.h"
@@ -91,6 +90,26 @@ static int cmd_testthp(int argc, char **argv)
   return(rval);
 }
 
+static int cmd_testpress(int argc, char **argv)
+{
+  (void) argc;
+  (void) argv;
+  float pressure, temperature;
+
+  uint8_t status = measure_pressure(&pressure, &temperature);
+  if (status != 0) {
+    printf("measure_pressure failed; status=%d\n",status);
+    return(status);
+  }
+  int tt=(int)temperature;
+  int ttf=(int) (fabs(temperature-tt)*100);
+  int pp=(int)pressure;
+  int ppf=(int) (fabs(pressure-pp)*100);
+  myprintf("P=%d.%02d psi, T=%d.%02d\n",pp,ppf,tt,ttf);
+  
+  return(status);
+}
+
 
 dispatchEntry mainCommands[] = {
 //Context, Command,        ShortHelp,                                          command proc,  help proc
@@ -106,6 +125,7 @@ dispatchEntry mainCommands[] = {
   {"","testee",           "                      Test eeprom", cmd_testee, NULL},
 #endif
   {"","testthp",          "                      Test Temp/Hum/Press sensor", cmd_testthp, NULL},
+  {"","testpress",        "                      Test the pressure sensor", cmd_testpress, NULL},
   //LAST ENTRY
   {NULL, NULL, NULL, NULL, NULL}
 };

@@ -65,7 +65,9 @@ extern "C" {
   
 #define TESTEEPROM 1
 #include "eeprom9366.h"
-  
+#include "ms8607.h"
+#include "SSCDANN150PG2A3.h"
+
 //#define CEXCEPTION_USE_CONFIG_FILE
 //#include "CException.h"
 

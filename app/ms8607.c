@@ -74,10 +74,10 @@ extern "C" {
 #define HUMIDITY_COEFF_ADD				(-6)
 
   // Conversion timings
-#define HSENSOR_CONVERSION_TIME_12b			16000
-#define HSENSOR_CONVERSION_TIME_10b		        5000
-#define HSENSOR_CONVERSION_TIME_8b			3000
-#define HSENSOR_CONVERSION_TIME_11b			9000
+#define HSENSOR_CONVERSION_TIME_12b			20000
+#define HSENSOR_CONVERSION_TIME_10b		        9000
+#define HSENSOR_CONVERSION_TIME_8b			5000
+#define HSENSOR_CONVERSION_TIME_11b			15000
 
 #define HSENSOR_RESET_TIME				15	// ms value
 
@@ -316,7 +316,6 @@ extern "C" {
       return status;
 
     status = hsensor_read_relative_humidity(h);
-    myprintf("humidity status: %d\n",status);
     if (status != ms8607_status_ok)
       return status;
 
@@ -734,9 +733,10 @@ extern "C" {
    */
   enum ms8607_status hsensor_read_relative_humidity(float *humidity) {
     enum ms8607_status status;
-    uint16_t adc;
+    uint16_t adc=0;
 
     status = hsensor_humidity_conversion_and_read_adc(&adc);
+
     if (status != ms8607_status_ok)
       return status;
 
@@ -1200,6 +1200,7 @@ extern "C" {
      * RM implies it will stall until it can write out the later bits
      */
     while (!i2c_transfer_complete(I2C2));
+    i2c_enable_autoend(I2C2);
     return (STATUS_OK);
   }
 
