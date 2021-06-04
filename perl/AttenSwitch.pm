@@ -4,21 +4,25 @@
 # Santa Rosa, CA 95404
 # Tel:(707)536-1330
 #
-
 # Control USB Attenuator/Switch/Stacklight microcontroller
 # via packet protocol over bulk channel
 #
 # code lives here: https://github.com/mikef5410/USB_Attenuator_Switch_Stacklight.git
 #
-
 package AttenSwitch;
-use Device::USB;
+
+#use Device::USB;
+use USB::LibUSB;
 use Moose;
 use Moose::Exporter;
 use MooseX::ClassAttribute;
 use namespace::autoclean;
+
+#use YAML::XS;
+use Data::Dumper qw(Dumper);
 ## no critic (BitwiseOperators)
 ## no critic (ValuesAndExpressions::ProhibitAccessOfPrivateData)
+## no critic (Variables::RequireLexicalLoopIterators)
 #
 
 =head1 NAME
@@ -30,7 +34,6 @@ AttenSwitch - Communicate with USB Attenuator/Switch/Stacklight driver via packe
 VERSION 0.01
 
 =cut
-
 our $VERSION = '0.01';
 
 =head1 SYNOPSIS
@@ -53,7 +56,7 @@ our $VERSION = '0.01';
 
   use AttenSwitch;
 
-  my $dut    = AttenSwitch->new(PID => 0x0003, SERIAL => "138001F0" );
+  my $dut    = AttenSwitch->new(VIDPID => [0x4161,0x0003], SERIAL => "138001F0" );
   my $result = $dut->connect();
   if ( $result == AttenSwitch::SUCCESS ) {
      print("Got device\n");
@@ -97,7 +100,7 @@ B<validVids> - An array ref of Vids this module will recognize. Defaults to [ 0x
 
 =item *
 
-B<validPids> - An array ref of Pids this module will recognize, Defaults to  [ 0x00ff, 0x0003, 0x0001, 0x0002 ]
+B<validVidPids> - An array ref of [Vid,Pid]'s this module will recognize, Defaults to  [ [0x4161,0x00ff] , [0x4161,0x0003], [0x4161,0x0001], [0x4161,0x0002], [0x4161,0x0004] ] 
 
 =back
 
@@ -107,19 +110,15 @@ B<validPids> - An array ref of Pids this module will recognize, Defaults to  [ 0
 
 =item *
 
-B<dev> - The underlying USB device (Device::USB::Device)
+B<dev> - The underlying USB device 
 
 =item *
 
-B<usb> - The underlying USB bus (Device::USB)
+B<usb> - The underlying USB bus context (USB::LibUSB)
 
 =item *
 
-B<VID> - A specific VID to which we want to connect
-
-=item *
-
-B<PID> - A specific PID to which we want to connect
+B<VIDPID> - A specific [VID,PID] to which we want to connect
 
 =item *
 
@@ -152,14 +151,27 @@ B<product> - Product string.
 =cut
 
 # Class Attributes
-class_has 'validVids' => (
+class_has 'validVidPids' => (
   is      => 'ro',
-  default => sub { [ 0x4161, ] }
+  default => sub {
+    [
+      [ 0x4161, 0x00ff ],
+      [ 0x4161, 0x0003 ],
+      [ 0x4161, 0x0001 ],
+      [ 0x4161, 0x0002 ],
+      [ 0x4161, 0x0004 ],
+      [ 0x4161, 0x0005 ],
+    ]
+  }
 );
-class_has 'validPids' => (
-  is      => 'ro',
-  default => sub { [ 0x00ff, 0x0003, 0x0001, 0x0002 ] }
-);
+
+# Known devices:
+#  0x00ff - unconfigured
+#  0x0001 - USB Stacklight
+#  0x0002 - MapleOLT serdes RF mux
+#  0x0003 - USB Attenuator controller
+#  0x0004 - USB Dual SPDT
+#  0x0005 - USB air pressure sensor
 class_has 'SUCCESS'    => ( is => 'ro', default => 0 );
 class_has 'FAIL'       => ( is => 'ro', default => -1 );
 class_has 'CMD_OUT_EP' => ( is => 'rw', default => 0x1 );
@@ -168,63 +180,58 @@ class_has 'CMD_IN_EP'  => ( is => 'rw', default => 0x81 );
 # Instance Attributes
 has 'dev' => (
   is        => 'rw',
-  isa       => 'Device::USB::Device',
   predicate => 'connected',
   builder   => 'connect',
   lazy      => 1,
 );
-
-has 'usb' => (
+has 'handle' => ( is => 'rw', );
+has 'usb'    => (
   is      => 'rw',
-  isa     => 'Device::USB',
-  default => sub { Device::USB->new(); }
+  isa     => 'USB::LibUSB',
+  default => sub { USB::LibUSB->init(); }
 );
-
-has 'VID' => (
+has 'VIDPID' => (
   is        => 'rw',
-  isa       => 'Int',
-  predicate => 'has_VID',
+  isa       => 'ArrayRef',
+  predicate => 'has_VIDPID',
 );
-
-has 'PID' => (
-  is        => 'rw',
-  isa       => 'Int',
-  predicate => 'has_PID',
-);
-
 has 'SERIAL' => (
   is        => 'rw',
   isa       => 'Str',
   predicate => 'has_SERIAL',
 );
-
 has 'PRODINFO' => (
   is  => 'rw',
   isa => 'AttenSwitch::ProdInfo'
 );
-
 has 'verbose' => (
   is      => 'rw',
   isa     => 'Bool',
   default => 0
 );
-
 has 'timeout_ms' => (
   is      => 'rw',
   isa     => 'Int',
   default => 500
 );
-
 has 'manufacturer' => (
   is      => 'rw',
   isa     => 'Str',
   default => '',
 );
-
 has 'product' => (
   is      => 'rw',
   isa     => 'Str',
   default => '',
+);
+has 'device' => (
+  is      => 'rw',
+  default => undef,
+);
+has 'eepromSize' => (
+  is      => 'rw',
+  isa     => "Int",
+  default => 0x200,
 );
 
 =head2 METHODS
@@ -242,66 +249,65 @@ be able to talk to a specific device.
 
 sub connect {
   my $self = shift;
-
-  my @vids = $self->has_VID() ? $self->VID() : @{ AttenSwitch->validVids() };
-  my @pids = $self->has_PID() ? $self->PID() : @{ AttenSwitch->validPids() };
+  my @ids  = $self->has_VIDPID() ? $self->VIDPID() : @{ AttenSwitch->validVidPids() };
   my $vid;
   my $pid;
   my $dev;
-
-  foreach $vid (@vids) {
-    foreach $pid (@pids) {
-      if ( $self->has_SERIAL ) {
-        $dev = $self->usb->find_device_if(
-          sub {
-            return ( ( $_->idVendor == $vid ) && ( $_->idProduct == $pid ) && ( $_->serial_number eq $self->SERIAL ) );
-          }
-        );
-      } else {
-        $dev = $self->usb->find_device( $vid, $pid );
-      }
-      if ( defined $dev ) {
-        goto FOUND;
-      }
-    }
+  if ( defined( $self->device ) ) {
+    $dev = $self->device;
+    goto FOUND;
   }
-  if ( !defined $dev ) {
+  my $handle;
+  if ( $self->has_SERIAL ) {
+    $handle = $self->usb->open_device_with_vid_pid_serial( $self->VIDPID->[0], $self->VIDPID->[1], $self->SERIAL );
+  } elsif ( $self->has_VIDPID ) {
+    $handle = $self->usb->open_device_with_vid_pid( $self->VIDPID->[0], $self->VIDPID->[1] );
+  }
+  if ( !defined($handle) ) {
+    foreach my $id (@ids) {
+      $handle = $self->usb->open_device_with_vid_pid( $self->VIDPID->[0], $self->VIDPID->[1] );
+      last if ( defined($handle) );
+    }    #next ID
+  }
+  if ( !defined $handle ) {
     print "ERROR: could not find any AttenSwitch devices \n";
     return AttenSwitch->FAIL;
   }
-
 FOUND:
-  $self->VID( $dev->idVendor() );
-  $self->PID( $dev->idProduct() );
-  $self->SERIAL( $dev->serial_number() );
-  $self->manufacturer( $dev->manufacturer() );
-  $self->product( $dev->product() );
+  $dev = $handle->get_device();
+  $self->handle($handle);
+  $self->dev($dev);
+  my $desc = $dev->get_device_descriptor();
+  $self->VIDPID( [ $desc->{idVendor}, $desc->{idProduct} ] );
+  $self->SERIAL( $handle->get_string_descriptor_ascii( $desc->{iSerialNumber}, 64 ) );
+  $self->manufacturer( $handle->get_string_descriptor_ascii( $desc->{iManufacturer}, 256 ) );
+  $self->product( $handle->get_string_descriptor_ascii( $desc->{iProduct}, 256 ) );
+  $self->handle->set_auto_detach_kernel_driver(1);
 
-  $dev->open();
   if ( $self->verbose ) {
-    printf( "Manufacturer   %s, %s \n",                $dev->manufacturer(), $dev->product() );
-    printf( "Device         VID: %04X   PID: %04X \n", $self->VID,           $self->PID );
+    printf( "Manufacturer   %s, %s \n",                $self->manufacturer(), $self->product() );
+    printf( "Device         VID: %04X   PID: %04X \n", $self->VIDPID->[0],    $self->VIDPID->[1] );
   }
-  my $cfg   = $dev->config()->[0];
-  my $numIf = $cfg->bNumInterfaces();
-  my $inter = $cfg->interfaces()->[0]->[0];
-  for ( my $if = 0 ; $if < $numIf ; $if++ ) {
-    $inter = $cfg->interfaces()->[$if]->[0];
-    my $numEp = $inter->bNumEndpoints();
-    if ( $self->verbose() ) {
-      printf( "Interface      0x%x,  index %d \n", $inter, $if );
+  my $cfg   = $dev->get_active_config_descriptor();
+  my $numIf = $cfg->{bNumInterfaces};
+  my $inter = $cfg->{interface}->[0]->[0];
+  my $numEp = 0;
+  if ( $self->verbose() ) {
+    for ( my $if = 0 ; $if < $numIf ; $if++ ) {
+      $inter = $cfg->{interface}->[$if]->[0];
+      $numEp = $inter->{bNumEndpoints};
+      printf( "Interface class 0x%x,  index %d, %d endpoints.\n", $inter->{bInterfaceClass}, $if, $numEp );
       printf("Endpoints      ");
-    }
-    for ( my $epnum = 0 ; $epnum < $numEp ; $epnum++ ) {
-      my $ep = $inter->endpoints()->[$epnum];
-      printf( "0x%02x   ", $ep->bEndpointAddress() ) if ( $self->verbose() );
-    }
-    printf("\n") if ( $self->verbose() );
+      for ( my $epnum = 0 ; $epnum < $numEp ; $epnum++ ) {
+        my $ep = $inter->{endpoint}->[$epnum];
+        printf( "0x%02x   ", $ep->{bEndpointAddress} );
+      }    #Loop over endpoints
+      printf("\n");
+    }    #Loop over interfaces
   }
-  my $claim = $dev->claim_interface(0x2);    #Interface #2 is my command I/O interface
+  my $claim = $self->handle->claim_interface(0x2);    #Interface #2 is my command I/O interface
   printf("Claim returns  $claim \n") if ( $self->verbose() );
   $self->dev($dev);
-
   $self->PRODINFO( $self->identify );
 
   # $dev->close();
@@ -321,8 +327,10 @@ You can do this when done with the device.
 
 sub disconnect {
   my $self = shift;
-  $self->dev->release_interface(0x2);
+  $self->handle->release_interface(0x2);
+  $self->handle->close();
   undef( $self->{dev} );
+  undef( $self->{handle} );
 }
 
 =over 4
@@ -338,9 +346,8 @@ $err will be either AttenSwitch->SUCCESS or AttenSwitch->FAIL.
 =cut
 
 sub send_packet {
-  my $self   = shift;
-  my $packet = shift;    #AttenSwitch::Packet;
-
+  my $self     = shift;
+  my $packet   = shift;                        #AttenSwitch::Packet;
   my $rxPacket = AttenSwitch::Packet->new();
   if ( defined( $self->dev ) ) {
     if ( ref($packet) && $packet->isa("AttenSwitch::Packet") ) {
@@ -350,16 +357,16 @@ sub send_packet {
       my $bytes = $packet->packet;
       my $notSent;
       do {
-        my $ret = $self->dev->bulk_write( AttenSwitch->CMD_OUT_EP, $bytes, length($bytes), $self->timeout_ms );
+        my $ret = $self->handle->bulk_transfer_write( AttenSwitch->CMD_OUT_EP, $bytes, $self->timeout_ms );
         $txTot += $ret;
         $notSent = length( $packet->packet ) - $txTot;
-        $bytes = substr( $packet->packet, $txTot );
+        $bytes   = substr( $packet->packet, $txTot );
       } while ( $notSent > 0 );
 
       #Now, get the response packet
       my $rxbuf = "";
       my $ret;
-      $ret = $self->dev->bulk_read( AttenSwitch->CMD_IN_EP, $rxbuf, 1024, $self->timeout_ms );
+      $rxbuf = $self->handle->bulk_transfer_read( AttenSwitch->CMD_IN_EP, 1024, $self->timeout_ms );
       $rxPacket->from_bytes($rxbuf);
       if ( $rxPacket->command->is_ack ) {
         return ( AttenSwitch->SUCCESS, $rxPacket );
@@ -383,9 +390,8 @@ $err will be either AttenSwitch->SUCCESS or AttenSwitch->FAIL.
 =cut
 
 sub sp8t {
-  my $self = shift;
-  my $sel  = shift;    #AttenSwitch::SP8TSETTING
-
+  my $self   = shift;
+  my $sel    = shift;                      #AttenSwitch::SP8TSETTING
   my $outPkt = AttenSwitch::Packet->new(
     command => AttenSwitch::COMMAND->SP8T,
     payload => pack( "C", $sel->ordinal )
@@ -407,10 +413,9 @@ $err will be either AttenSwitch->SUCCESS or AttenSwitch->FAIL.
 =cut
 
 sub spdt {
-  my $self = shift;
-  my $sw   = shift;    #AttenSwitch::SPDTSEL
-  my $set  = shift;    #AttenSwitch::SPDTSETTING
-
+  my $self   = shift;
+  my $sw     = shift;                      #AttenSwitch::SPDTSEL
+  my $set    = shift;                      #AttenSwitch::SPDTSETTING
   my $outPkt = AttenSwitch::Packet->new(
     command => AttenSwitch::COMMAND->SPDT,
     payload => pack( "CC", $sw->ordinal, $set->ordinal )
@@ -433,9 +438,8 @@ $err will be either AttenSwitch->SUCCESS or AttenSwitch->FAIL.
 =cut
 
 sub atten {
-  my $self = shift;
-  my $sel  = shift;    #AttenSwitch::ATTEN
-
+  my $self   = shift;
+  my $sel    = shift;                      #AttenSwitch::ATTEN
   my $outPkt = AttenSwitch::Packet->new(
     command => AttenSwitch::COMMAND->ATT,
     payload => pack( "C", $sel->ordinal )
@@ -462,8 +466,7 @@ sub stacklightNotify {
   my $onTime  = shift || 0;
   my $offTime = shift || 0;
   my $count   = shift || 0;
-
-  my $col = 0;
+  my $col     = 0;
   $col |= 0x1 if ( $color =~ /R/ );
   $col |= 0x2 if ( $color =~ /Y/ );
   $col |= 0x4 if ( $color =~ /G/ );
@@ -473,6 +476,40 @@ sub stacklightNotify {
   );
   my ( $res, $rxPacket ) = $self->send_packet($outPkt);
   return ($res);
+}
+
+=over 4
+
+=item B<< $return = $attenswitch->getAmbientTHP() >> 
+
+Reads ambient air temp, pressure and humidity. Returns [TempC,RH%,PressPa]
+
+=back
+
+=cut
+
+sub getAmbientTHP {
+  my $self   = shift;
+  my $outPkt = AttenSwitch::Packet->new( command => AttenSwitch::COMMAND->AMBIENTTHP, payload => "" );
+  my ( $res, $rxPacket ) = $self->send_packet($outPkt);
+}
+
+=over 4
+
+=item B<< $return = $attenswitch->getAirlinePT() >> 
+
+Reads ambient air temp, pressure and humidity. Returns [PressurePSI,TempC]
+
+
+=back
+
+
+=cut
+
+sub getAirlinePT {
+  my $self   = shift;
+  my $outPkt = AttenSwitch::Packet->new( command => AttenSwitch::COMMAND->AIRPRESSTEMP, payload => "" );
+  my ( $res, $rxPacket ) = $self->send_packet($outPkt);
 }
 
 =over 4
@@ -490,9 +527,8 @@ sub readEE {
   my $self   = shift;
   my $addr   = shift;
   my $nbytes = shift;
-
-  my $ret = "";
-  my $k   = 0;
+  my $ret    = "";
+  my $k      = 0;
   my $outPkt;
   for ( $k = 0 ; $k < $nbytes ; $k++ ) {
     $outPkt = AttenSwitch::Packet->new(
@@ -521,8 +557,7 @@ sub writeEE {
   my $self = shift;
   my $addr = shift;
   my $val  = shift;    # string of bytes
-
-  my $k = 0;
+  my $k    = 0;
   my $outPkt;
   for ( $k = 0 ; $k < length($val) ; $k++ ) {
     $outPkt = AttenSwitch::Packet->new(
@@ -544,8 +579,7 @@ Bulk erase the EEprom. Dangerous.
 =cut
 
 sub eraseAllEE {
-  my $self = shift;
-
+  my $self   = shift;
   my $outPkt = AttenSwitch::Packet->new(
     command => AttenSwitch::COMMAND->ERASEALL,
     payload => ""
@@ -565,19 +599,232 @@ Ask the device to self-identify. Returns an AttenSwitch::ProdInfo object.
 =cut
 
 sub identify {
-  my $self = shift;
-
+  my $self   = shift;
   my $outPkt = AttenSwitch::Packet->new(
     command => AttenSwitch::COMMAND->ID,
     payload => ""
   );
-
   my ( $res, $rxPacket ) = $self->send_packet($outPkt);
   my $info = AttenSwitch::ProdInfo->new();
   $info->fromIDPacket($rxPacket);
   return ($info);
 }
 
+=over 4
+
+=item B<< $attenswitch->blink($on) >>
+
+Ask the device to rapidly blink it's red led for easy identification.
+$on should be 1 for blink on, 0 for blink off
+
+=back
+
+=cut
+
+sub blink {
+  my $self   = shift;
+  my $on     = shift || 0;
+  my $outPkt = AttenSwitch::Packet->new(
+    command => AttenSwitch::COMMAND->BLINK,
+    payload => pack( "C", $on )
+  );
+  my ( $res, $rxPacket ) = $self->send_packet($outPkt);
+  return ($res);
+}
+
+# EEProm Memory Map
+# 0 - Magic. 0xAA if it's not there, don't read eeprom
+# 1,2 - VID little endian
+# 3,4 - PID little endian
+# 5,6 - Mfg pointer. Address of Mfg string. If ptr or length are zero, don't read.
+# 7 - Mfg length
+# 8,9 - Product string pointer (LE).
+# A - Product string length
+# B,C - Serial number pointer (LE).
+# D  - Serial number length
+# E  - S1 is pulse high (boolean)
+# F  - S2 is pulse high (boolean)
+# 10,11 - Extra string ptr.
+# 12 - Extra string length.
+#
+# Strings should start at 0x30 to leave room.
+
+=over 4
+
+=item B<< $attenswitch->eeMagic($value) >>
+
+Read/Write the magic value from EEprom. If called without args, read. Else write.
+Magic is one byte, 0xAA to indicate EEprom is valid.
+
+=back
+
+=cut
+sub eeMagic {
+  my $self = shift;
+  my $val  = shift;         #number
+  if ( defined($val) ) {    # Writing
+    $val = $val + 0;
+    $val = $val & 0xff;
+    $self->writeEE( 0, pack( "C", $val ) );
+  } else {                  #reading
+    $val = unpack( "C", $self->readEE( 0, 1 ) );
+  }
+  return ( $val + 0 );
+}
+
+=over 4
+
+=item B<< ($vid,$pid) = $attenswitch->eeVidPid($vid,$pid) >>
+
+Read/Write the VID and PID values from EEprom. If called without PID, read. Else write.
+VID will default to our default VID if undef. VID and PID are 16 bit numbers.
+
+=back
+
+=cut
+
+sub eeVidPid {
+  my $self = shift;
+  my $vid  = shift || AttenSwitch->validVids()->[0];
+  my $pid  = shift;
+  if ( defined($pid) ) {    # Writing
+    $vid &= 0xffff;
+    $pid &= 0xffff;
+    $self->writeEE( 1, pack( "vv", $vid, $pid ) );
+  } else {                  #Reading
+    ( $vid, $pid ) = unpack( "vv", $self->readEE( 1, 4 ) );
+  }
+  return ( $vid, $pid );
+}
+
+=over 4
+
+=item B<< $stringArrayref = $attenswitch->readEEStrings() >>
+
+Read the EEprom strings and return in an array reference:
+$stringArrayref->[0] = Manufacturer string,
+$stringArrayref->[1] = Product string,
+$stringArrayref->[2] = Serial number string,
+$stringArrayref->[3] = Extra string
+
+=back
+
+=cut
+
+sub readEEStrings {
+  my $self    = shift;
+  my @strings = ( "", "", "", "" );
+  my ( $mfgP, $mfgL )     = unpack( "vC", $self->readEE( 5, 3 ) );
+  my ( $prdP, $prdL )     = unpack( "vC", $self->readEE( 8, 3 ) );
+  my ( $serP, $serL )     = unpack( "vC", $self->readEE( 0xb, 3 ) );
+  my ( $extraP, $extraL ) = unpack( "vC", $self->readEE( 0x10, 3 ) );
+  if ( $self->validStr( $mfgP, $mfgL ) ) {
+    $strings[0] = $self->readEE( $mfgP, $mfgL );
+  }
+  if ( $self->validStr( $prdP, $prdL ) ) {
+    $strings[1] = $self->readEE( $prdP, $prdL );
+  }
+  if ( $self->validStr( $serP, $serL ) ) {
+    $strings[2] = $self->readEE( $serP, $serL );
+  }
+  if ( $self->validStr( $extraP, $extraL ) ) {
+    $strings[3] = $self->readEE( $extraP, $extraL );
+  }
+  return ( \@strings );
+}
+
+sub validStr {
+  my $self = shift;
+  my $ptr  = shift;
+  my $len  = shift;
+  return (0) if ( $ptr < 0x20 );
+  return (0) if ( $len == 0 );
+  return (0) if ( ( $ptr + $len ) >= $self->eepromSize );
+  return (1);
+}
+
+=over 4
+
+=item B<< $attenswitch->writeEEStrings($stringArrayref) >>
+
+Write the EEprom strings:
+$stringArrayref->[0] = Manufacturer string,
+$stringArrayref->[1] = Product string,
+$stringArrayref->[2] = Serial number string,
+$stringArrayref->[3] = Extra string
+
+=back
+
+=cut
+
+sub writeEEStrings {
+  my $self      = shift;
+  my $stringRef = shift;
+  $stringRef->[0] = "" if ( !defined( $stringRef->[0] ) );
+  $stringRef->[1] = "" if ( !defined( $stringRef->[1] ) );
+  $stringRef->[2] = "" if ( !defined( $stringRef->[2] ) );
+  $stringRef->[3] = "" if ( !defined( $stringRef->[3] ) );
+  my $addr = 0x30;
+
+  #Manufacturer string
+  if ( length( $stringRef->[0] ) ) {
+    $self->writeEE( 0x5,   pack( "vC", $addr, length( $stringRef->[0] ) ) );
+    $self->writeEE( $addr, $stringRef->[0] );
+    $addr += length( $stringRef->[0] );
+  } else {
+    $self->writeEE( 0x5, pack( "vC", 0, 0 ) );
+  }
+
+  #Product string
+  if ( length( $stringRef->[1] ) ) {
+    $self->writeEE( 0x8,   pack( "vC", $addr, length( $stringRef->[1] ) ) );
+    $self->writeEE( $addr, $stringRef->[1] );
+    $addr += length( $stringRef->[1] );
+  } else {
+    $self->writeEE( 0x8, pack( "vC", 0, 0 ) );
+  }
+
+  #Serial string
+  if ( length( $stringRef->[2] ) ) {
+    $self->writeEE( 0xb,   pack( "vC", $addr, length( $stringRef->[2] ) ) );
+    $self->writeEE( $addr, $stringRef->[2] );
+    $addr += length( $stringRef->[2] );
+  } else {
+    $self->writeEE( 0xb, pack( "vC", 0, 0 ) );
+  }
+
+  #Extra string
+  if ( length( $stringRef->[3] ) ) {
+    $self->writeEE( 0x10,  pack( "vC", $addr, length( $stringRef->[3] ) ) );
+    $self->writeEE( $addr, $stringRef->[3] );
+    $addr += length( $stringRef->[3] );
+  } else {
+    $self->writeEE( 0x10, pack( "vC", 0, 0 ) );
+  }
+}
+
+=over 4
+
+=item B<< ($s1pol,$s2pol) = $attenswitch->eePolarity($s1pol,$s2pol) >>
+
+Read/Write the S1 & S2 polarity values from EEprom. If called without S1 polarity, read. Else write.
+$s1pol and $s2pol are booleans. 1 = pulse high, 0 = pulse low.
+
+=back
+
+=cut
+
+sub eePolarity {
+  my $self  = shift;
+  my $s1pol = shift;
+  my $s2pol = shift || $s1pol;
+  if ( defined($s1pol) ) {    #Writing
+    $self->writeEE( 0xe, pack( "CC", ( $s1pol != 0 ), ( $s2pol != 0 ) ) );
+  } else {
+    ( $s1pol, $s2pol ) = unpack( "CC", $self->readEE( 0xe, 2 ) );
+  }
+  return ( $s1pol, $s2pol );
+}
 __PACKAGE__->meta->make_immutable;
 1;
 
@@ -730,8 +977,7 @@ has 'SN' => (
 sub fromIDPacket {
   my $self   = shift;
   my $packet = shift;
-
-  my $pl = $packet->payload;
+  my $pl     = $packet->payload;
   my ( $prod, $proto, $fwMajor, $fwMinor, $fwBuild, $bldSha ) = unpack( "CCCCvC/a", $pl );
   $self->productID( AttenSwitch::PRODUCTID->from_ordinal($prod) );
   $self->protocolVersion($proto);
@@ -740,17 +986,15 @@ sub fromIDPacket {
   $self->fwRevBuild($fwBuild);
   $self->fwSHA1($bldSha);
 }
-
 __PACKAGE__->meta->make_immutable;
 1;
-
 #
 # BEGIN ENUMERATION CLASSES
 #
 package AttenSwitch::COMMAND;
 use Class::Enum qw(ACK NAK RESET ID ECHO SSN DIAG SP8T
   AUXOUT AUXIN ATT LIGHT NOTIFY READEE
-  WRITEEE SPDT ERASEALL
+  WRITEEE SPDT ERASEALL BLINK CMD_AMBIENTTHP CMD_AIRPRESSTEMP
 );
 1;
 
@@ -777,9 +1021,11 @@ use Class::Enum qw(J1 J2 J3 J4 J5 J6 J7 J8);
 
 package AttenSwitch::PRODUCTID;
 use Class::Enum (
-  PROD_UNKNOWN    => { ordinal => 0xff },
-  PROD_STACKLIGHT => { ordinal => 1 },
-  PROD_MAPLEOLT   => { ordinal => 2 },
-  PROD_ATTEN70    => { ordinal => 3 },
+  PROD_UNKNOWN      => { ordinal => 0xff },
+  PROD_STACKLIGHT   => { ordinal => 1 },
+  PROD_MAPLEOLT     => { ordinal => 2 },
+  PROD_ATTEN70      => { ordinal => 3 },
+  PROD_DUALSPDT     => { ordinal => 4 },
+  PROD_PRESSURESENS => { ordinal => 5 },
 );
 1;

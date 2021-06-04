@@ -35,6 +35,7 @@ extern "C" {
     CMD_ERASEALL,    // 09 0x09  erase al of the EEProm
     CMD_AMBIENTTHP, // 10 0xa   read ambient air temperature degCX100, humidity %rhX10, pressure paX100 3int32 payload
     CMD_AIRPRESSTEMP, // 11 0xb  read air pressure sensor PSI x 100, temp C x 100 3int32 payload
+    CMD_BLINK = 17,    // 17 0x11 blink LED on board to identify (1 byte, 0 for off, nonzero for on)
   } pkttype_t;
 
   typedef enum {
@@ -42,7 +43,8 @@ extern "C" {
     PROD_STACKLIGHT = 1,
     PROD_MAPLEOLT = 2,
     PROD_ATTEN70 = 3,
-    PROD_PRESSURESENS = 4
+    PROD_DUALSPDT = 4,
+    PROD_PRESSURESENS = 5
   } product_t;
   
   typedef enum {
