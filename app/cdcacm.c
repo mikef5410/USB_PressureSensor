@@ -444,7 +444,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
 
 
   //If enumeration info is in EEPROM, use it, instead.
-  //readEEprom();  FIXME!
+  readEEprom(); 
   
   vSemaphoreCreateBinary(usbInterrupted);
   //Take the semaphore nonblocking to ensure in the correct state
