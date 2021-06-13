@@ -253,6 +253,8 @@ __attribute__((noreturn)) portTASK_FUNCTION(vInstrumentTask, pvParameters) {
         break;
 
       case CMD_AMBIENTTHP:
+        copyPacket(instrInpktBuf, instrOutpktBuf);
+        instrOutpktBuf->length=htole16(USB_PKT_MIN_HEADER_SZ + sizeof(payload_3int32_t));
         stat8607 = ms8607_read_temperature_pressure_humidity(&t, &p, &h);
         if (stat8607 == ms8607_status_ok) {
           instrOutpktBuf->payload.pl_3int32.int32a=(int32_t)(100.0 * t);
@@ -264,6 +266,8 @@ __attribute__((noreturn)) portTASK_FUNCTION(vInstrumentTask, pvParameters) {
         break;
 
       case CMD_AIRPRESSTEMP:
+        copyPacket(instrInpktBuf, instrOutpktBuf);
+        instrOutpktBuf->length=htole16(USB_PKT_MIN_HEADER_SZ + sizeof(payload_3int32_t));
         statusPressSens = measure_pressure(&p, &t);
         if (statusPressSens == 0) {
           instrOutpktBuf->payload.pl_3int32.int32a=(int32_t)(100.0 * t);

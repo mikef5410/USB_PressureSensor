@@ -30,12 +30,20 @@ extern "C" {
     CMD_ECHO,       // 04 0x04  
     CMD_SSN,        // 05 0x05  silicon serial number
     CMD_DIAG,       // 06 0x06  diagnostic self-test cmd, result-string
-    CMD_READEE,     // 07 0x07  read one byte of EEprom, 2-byte address (LE)
-    CMD_WRITEEE,    // 08 0x08  write one byte of EEprom, 2-byte address (LE), 1 byte data
-    CMD_ERASEALL,    // 09 0x09  erase al of the EEProm
-    CMD_AMBIENTTHP, // 10 0xa   read ambient air temperature degCX100, humidity %rhX10, pressure paX100 3int32 payload
-    CMD_AIRPRESSTEMP, // 11 0xb  read air pressure sensor PSI x 100, temp C x 100 3int32 payload
-    CMD_BLINK = 17,    // 17 0x11 blink LED on board to identify (1 byte, 0 for off, nonzero for on)
+    CMD_SP8T,       // 07 0x07  set the SP8T to selected (payload one byte)
+    CMD_AUXOUT,     // 08 0x08  set auxout bits (payload one byte)
+    CMD_AUXIN,      // 09 0x09  read aux in bits
+    CMD_ATT,        // 10 0x0A  set attenuation (one byte, enum)
+    CMD_LIGHT,      // 11 0x0B  set stacklight static (one byte, bitmapped)
+    CMD_NOTIFY,     // 12 0x0C  blink light (1 bytes: R|Y|G|OFF, long on time, long off time, long count)
+    CMD_READEE,     // 13 0x0D  read one byte of EEprom, 2-byte address (LE)
+    CMD_WRITEEE,    // 14 0x0E  write one byte of EEprom, 2-byte address (LE), 1 byte data
+    CMD_SPDT,       // 15 0x0F  set one of two spdts, 2 bytes { SW1 | SW2, J1|J2 }
+    CMD_ERASEALL,    // 16 0x10  erase al of the EEProm
+    CMD_BLINK,    // 17 0x11 blink LED on board to identify (1 byte, 0 for off, nonzero for on)
+    CMD_AMBIENTTHP, // 18 0x12   read ambient air temperature degCX100, humidity %rhX10, pressure paX100 3int32 payload
+    CMD_AIRPRESSTEMP, // 19 0x13  read air pressure sensor PSI x 100, temp C x 100 3int32 payload
+
   } pkttype_t;
 
   typedef enum {
