@@ -505,10 +505,14 @@ sub dewpoint {
   my $HSENSOR_CONSTANT_B = 1762.39;
   my $HSENSOR_CONSTANT_C = 235.66;
 
-  my $partialPressure = 10.0**( $HSENSOR_CONSTANT_A - $HSENSOR_CONSTANT_B / ( $temp + $HSENSOR_CONSTANT_C ) );
-  my $dp = -$HSENSOR_CONSTANT_B / ( log10( $rh * $partialPressure / 100 ) - $HSENSOR_CONSTANT_A ) - $HSENSOR_CONSTANT_C;
-  $dp = int( ( 100.0 * $dp ) + 0.5 ) / 100.0;
-  return ($dp);
+  if ($rh > 0 ) {
+    my $partialPressure = 10.0**( $HSENSOR_CONSTANT_A - $HSENSOR_CONSTANT_B / ( $temp + $HSENSOR_CONSTANT_C ) );
+    my $dp = -$HSENSOR_CONSTANT_B / ( log10( $rh * $partialPressure / 100 ) - $HSENSOR_CONSTANT_A ) - $HSENSOR_CONSTANT_C;
+    $dp = int( ( 100.0 * $dp ) + 0.5 ) / 100.0;
+    return ($dp);
+  } else {
+    return(undef);
+  }
 }
 
 =over 4
