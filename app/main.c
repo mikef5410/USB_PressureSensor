@@ -16,8 +16,8 @@ extern portTASK_FUNCTION(vStackTask, pvParamaters);
 extern portTASK_FUNCTION(vInstrumentTask, pvParameters);
 static portTASK_FUNCTION(vLEDTask1, pvParameters)
 {
-  
   (void)(pvParameters);//unused params
+
   while(1) {
     if (USBConfigured) {
       redOn(0);
@@ -68,27 +68,24 @@ int main(void)
   ms8607_init();
   if (ms8607_is_connected()) {
     ms8607_reset();
-    ms8607_set_humidity_resolution(ms8607_humidity_resolution_12b);
+    ms8607_set_humidity_resolution(ms8607_humidity_resolution_11b);
     ms8607_set_pressure_resolution(ms8607_pressure_resolution_osr_8192);
     ms8607_disable_heater();
   }
   // Create tasks
   // remember, stack size is in 32-bit words and is allocated from the heap ...
-
+  qStatus = xTaskCreate(vUSBCDCACMTask, "USB Serial Task", 64, NULL, (tskIDLE_PRIORITY + 1UL),
+                        (xTaskHandle *) &xUSBCDCACMTaskHandle);
 
   qStatus = xTaskCreate(vLEDTask1, "LED Task 1", 64, NULL, (tskIDLE_PRIORITY + 1UL),
                         (xTaskHandle *) &xLED1TaskHandle);
 
-  qStatus = xTaskCreate(vUSBCDCACMTask, "USB Serial Task", 64, NULL, (tskIDLE_PRIORITY + 1UL),
-                        (xTaskHandle *) &xUSBCDCACMTaskHandle);
-
-
-  qStatus = xTaskCreate(vDebugShell, "Debug shell", 1024, NULL, (tskIDLE_PRIORITY + 1UL),
+  qStatus = xTaskCreate(vDebugShell, "Debug shell", 1200, NULL, (tskIDLE_PRIORITY + 1UL),
                         (xTaskHandle *) &xDebugShellTaskHandle);
 
-  qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1024, NULL,  (tskIDLE_PRIORITY + 1UL),
+  qStatus = xTaskCreate(vInstrumentTask, "Instrument task", 1500, NULL,  (tskIDLE_PRIORITY + 1UL),
                         (xTaskHandle *) &xInstrumentTaskHandle);
-  
+ 
   (void) qStatus;
 
   // start the scheduler

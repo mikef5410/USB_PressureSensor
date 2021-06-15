@@ -213,7 +213,7 @@ has 'verbose' => (
 has 'timeout_ms' => (
   is      => 'rw',
   isa     => 'Int',
-  default => 500
+  default => 5000
 );
 has 'manufacturer' => (
   is      => 'rw',

@@ -10,7 +10,7 @@ static void printMemoryManagementErrorMsg(uint32_t CFSRValue);
 void hard_fault_handler(/*uint32_t stack[]*/ void)
 {
   static char msg[80];
-   redOn(1);
+  redOn(1); greenOn(1); usbLEDon(1);
    //if((CoreDebug->DHCSR & 0x01) != 0) {
       printErrorMsg("In Hard Fault Handler\n");
       mysprintf(msg, "SCB_HFSR = 0x%08x\n",(unsigned int)SCB_HFSR);

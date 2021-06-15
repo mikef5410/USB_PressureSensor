@@ -432,7 +432,8 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   (void)(pvParameters);//unused params
   //__asm__ ("BKPT #01");
   UARTinQ = xQueueCreate( 256, sizeof(char));
-  CTRLinQ = xQueueCreate( 2, sizeof(cmd_packet_t));
+  CTRLinQ = xQueueCreate( 3, sizeof(cmd_packet_t));
+  vSemaphoreCreateBinary(usbInterrupted);
 
   //Default enumeration descriptors ...
   desig_get_unique_id_as_string(id,24); //Copy device SN to USB reported SN
@@ -445,8 +446,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
 
   //If enumeration info is in EEPROM, use it, instead.
   readEEprom(); 
-  
-  vSemaphoreCreateBinary(usbInterrupted);
+
   //Take the semaphore nonblocking to ensure in the correct state
   xSemaphoreTake(usbInterrupted,0);
 
@@ -460,8 +460,6 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
                   GPIO11 | GPIO12);
   gpio_set_af(GPIOA, GPIO_AF14, GPIO11 | GPIO12);
   rcc_periph_reset_release(RST_USB);
-
-  //gpio_set_output_options(GPIOA,GPIO_OTYPE_PP , GPIO_OSPEED_100MHZ, GPIO11|GPIO12);
   
   usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev, &config,
                        usb_strings, 3,
@@ -474,13 +472,18 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
   //Now handle normal USB traffic with interrupts.
   nvic_enable_irq(NVIC_USB_WKUP_IRQ);
   nvic_enable_irq(NVIC_USB_LP_IRQ);
-  nvic_enable_irq(NVIC_USB_HP_IRQ);
+  //nvic_enable_irq(NVIC_USB_HP_IRQ);
   while (1) {
     if (pdPASS == xSemaphoreTake(usbInterrupted,portMAX_DELAY)) {
       usbLEDon(1);
+      nvic_disable_irq(NVIC_USB_LP_IRQ); //We will only use the LP interrupt
+      //nvic_disable_irq(NVIC_USB_HP_IRQ);
+      nvic_disable_irq(NVIC_USB_WKUP_IRQ);
+      taskENTER_CRITICAL();
       usbd_poll(usbd_dev);
+      taskEXIT_CRITICAL();
       nvic_enable_irq(NVIC_USB_LP_IRQ);
-      nvic_enable_irq(NVIC_USB_HP_IRQ);
+      //nvic_enable_irq(NVIC_USB_HP_IRQ);
       usbLEDon(0);
     }
   }

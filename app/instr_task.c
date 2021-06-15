@@ -20,6 +20,7 @@
 // #define RX_QUEUE_DEBUG 1
 // #define TX_QUEUE_DEBUG 1
 extern usbd_device *CDCACM_dev; //cdcacm.c
+extern xTaskHandle *xLED1TaskHandle;
 
 xTaskHandle *xIDBlinkerTaskHandle = NULL;
 static uint8_t IDBlinkOn = 0;
