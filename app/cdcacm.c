@@ -466,6 +466,7 @@ portTASK_FUNCTION(vUSBCDCACMTask, pvParameters)
                        usbd_control_buffer, sizeof(usbd_control_buffer));
 
   usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
+  *USB_CNTR_REG &= ~USB_CNTR_SOFM; //Turn off SOF interrupts
   CDCACM_dev=usbd_dev;
 
 #if 1
