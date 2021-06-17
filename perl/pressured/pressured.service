@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitor lab air pressure
+After=network-online.target
+After=mosquitto.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/pressured
+PIDFile=/run/pressured/pressured.pid
+RestartSec=30
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

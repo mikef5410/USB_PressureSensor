@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+#
+#
+# Watch pressure sensor, report to MQTT
+#
+
+# Starts as root, drops privs to 'runas'.
+#
+
+use lib $ENV{BCOM_PERL} || "/projects/Bcom-perl";
+
+use strict;
+use EV;
+use Coro;
+use File::Basename qw(dirname basename);
+use File::Path qw(make_path);
+use Proc::Daemon;
+use Proc::PID::File;
+use Sys::Syslog qw(:standard :macros);
+use Time::HiRes;
+use Net::MQTT::Simple;
+use Net::MQTT::Simple::Auth;
+use Try::Tiny;
+use JSON;
+use Data::Dumper qw(Dumper);
+use Config::Simple;
+use AttenSwitch;
+use constant DAEMON     => 1;
+
+my $globalConfig  = "/etc/pressured.conf";
+my $pidfile       = "/run/pressured/pressured.pid";
+my $cfg;
+
+if ( -f $globalConfig ) {
+  $cfg = Config::Simple->new($globalConfig);
+} else {
+  die("Can't start, need config file $globalConfig");
+}
+
+my $runas        = $cfg->param("runuser");
+my $rungrp       = $cfg->param("rungroup");
+my $mqttServer   = $cfg->param("mqttserver");
+my $user         = $cfg->param("mqttuser");
+my $pass         = $cfg->param("mqttpass");
+my $sensorSN     = $cfg->param("sensorSerialNum");
+my $sensorName   = $cfg->param("sensorName") || "Main air pressure";
+my $topic        = "petaluma/lab/air";
+my $mqtt;
+
+if (DAEMON) {
+  daemonize();
+}
+
+openlog( "pressured", "", "local0" );
+syslog("info", "pressured started.");
+syslog("info", "mqtt server: $mqttServer, Run as: $runas");
+
+## Setup MQTT connection
+if ( length($user) && length($pass) ) {
+  $mqtt = Net::MQTT::Simple::Auth->new( $mqttServer, $user, $pass );
+} else {
+  $mqtt = Net::MQTT::Simple->new($mqttServer);
+}
+
+my $sensor = AttenSwitch->new(VIDPID=>[0x4161, 0x0005 ], SERIAL=>$sensorSN);
+if (!defined($sensor)) {
+  my $errm=sprintf("Unable to find USB pressure sensor with serial number: \"%s\"",$sensorSN);
+  syslog("error", $errm);
+  die($errm);
+}
+
+my $result=$sensor->connect();
+if ( $result == AttenSwitch::SUCCESS ) {
+  syslog("info","Connected to device.");
+}
+my $json=JSON->new;
+$json->utf8(1);
+
+while (1) {
+  my $pt = $sensor->getAirlinePT();
+  my $measurement = { 'AirlinePressure_PSI' => $pt->[0], 'AirlineTemp_C'=> $pt->[1], 'Time' => time };
+  my $thp = $sensor->getAmbientTHP();
+  $measurement->{'AmbientTemp_C'} = $thp->[0];
+  $measurement->{'AmbientHumidity_Percent'} = $thp->[1];
+  $measurement->{'AmbientPressure_mb'} = $thp->[2];
+  my $dp=$sensor->dewpoint($thp->[0], $thp->[1]);
+  $measurement->{'AmbientDewPoint_C'} = $dp;
+  my $jtext=$json->encode($measurement);
+  #print $jtext,"\n";
+  $mqtt->publish($topic, $jtext);
+  sleep(5);
+}
+
+# Fork, exec, drop privs and setpgrp to become a daemon. This program is meant to start life
+# as root, started by systemd
+sub daemonize {
+
+  #Daemonize, make sure we've got a writable directory for the pid file....
+  if ( !-d dirname($pidfile) ) {
+    make_path( dirname($pidfile) );
+  }
+  chown( scalar( getpwnam($runas) ), scalar( getgrnam($rungrp) ), dirname($pidfile) );
+  chmod( 0777, dirname($pidfile) );
+
+  # If already running, then exit (/var/run/basename($0).pid)
+  if ( Proc::PID::File->running( dir => dirname($pidfile) ) ) {
+    exit(0);
+  }
+  Proc::Daemon::Init(
+    {
+      setuid   => scalar( getpwnam($runas) ),
+      setgid   => scalar( getgrnam($rungrp) ),
+      pid_file => $pidfile
+    }
+  );
+}
+
