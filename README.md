@@ -1,8 +1,15 @@
 ## USB_Pressure_Sensor
 
-USB measurement of Air pressure (compressor monitoring)
-The device also includes an ambient air temperature, pressure, humidity monitor.
+USB measurement of Air pressure (compressor monitoring) The device also
+includes an ambient air temperature, pressure, humidity monitor. As it happens
+some of my work depends on a functioning air compressor, and ours is,
+er... less than reliable. So, this device allows some of my automation to keep
+an eye on the compressed air state, as well as air temperature, humidity and
+pressure in the lab.
 
+![USB Pressure Sensor as built](/doc/PressureSensor_asbuilt.jpg)
+
+![USB Pressure Sensor as installed](/doc/PressureSensor_installed.jpg)
 
 This project is an STM32F373 based USB gadget that measures air pressure in order to monitor compressor state.
 
